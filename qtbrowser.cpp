@@ -84,10 +84,11 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
     settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, false);
     settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, false);
-    settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
+  //settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
+  //settings->setAttribute(QWebSettings::FrameFlatteningEnable, true);
     settings->setWebGraphic(QWebSettings::MissingPluginGraphic, QPixmap());
 
-    const char* argUrl = NULL;
+    QUrl url;
 
     for (int ax = 1; ax < argc; ++ax) {
         size_t nlen;
@@ -100,7 +101,6 @@ int main(int argc, char *argv[]) {
             help();
             return 0;
         } else if (strcmp("--transparent", s) == 0) {
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
             QPalette palette;
             palette.setBrush(QPalette::Active, QPalette::Window, Qt::SolidPattern);
             palette.setBrush(QPalette::Active, QPalette::Base, Qt::SolidPattern);
@@ -111,12 +111,6 @@ int main(int argc, char *argv[]) {
             palette.setColor(QPalette::Inactive, QPalette::Window, Qt::transparent);
             palette.setColor(QPalette::Inactive, QPalette::Base, Qt::transparent);
             a.setPalette(palette);
-#else
-            g.setAttribute(Qt::WA_TranslucentBackground,true);
-            g.setAttribute(Qt::WA_OpaquePaintEvent, false);
-            view.setAttribute(Qt::WA_OpaquePaintEvent, false);
-            view.setAttribute(Qt::WA_TranslucentBackground,true);
-#endif
         }
 
         value = strchr(s, '=');
@@ -124,7 +118,7 @@ int main(int argc, char *argv[]) {
 
         // string options
         if (strncmp("--url", s, nlen) == 0) {
-            argUrl = value;
+            url = QUrl(value);
         } else if (strncmp("--app-name", s, nlen) == 0) {
             a.setApplicationName(value);
         } else if (strncmp("--app-version", s, nlen) == 0) {
@@ -156,10 +150,13 @@ int main(int argc, char *argv[]) {
             QNetworkAccessManager manager;
             manager.setProxy(proxy);
             view.page()->setNetworkAccessManager(&manager);
+        } else if (strncmp("--ini", s, nlen) == 0) {
+            QSettings ini(value, QSettings::IniFormat);
+            url = QUrl(ini.value("Network/firstUrl", QApplication::applicationDirPath()).toString());
         }
     }
 
-    view.load(QUrl((argUrl == NULL ? "http://www.google.com" : argUrl)));
+    view.load(url.isEmpty() ? QUrl("http://www.google.com") : url);
     view.setFocus();
     view.show();
 
