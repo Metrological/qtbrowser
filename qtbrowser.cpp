@@ -13,6 +13,38 @@
 
 #include <QWebSettings>
 
+class GraphicsWebView : public QGraphicsWebView {
+public:
+
+protected:
+    void contextMenuEvent(QGraphicsSceneContextMenuEvent* ev) {
+        if (ev != NULL)
+            ev->ignore();
+    }
+};
+
+class WebPage : public QWebPage {
+public:
+
+protected:
+    void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& source) {
+        if (source.isEmpty()) {
+            qDebug() << "[console]" << message.toUtf8().constData();
+        } else {
+            QString s = "[" + source + ":" + QString::number(lineNumber) + "]";
+            qDebug() << "[console]" << s.toUtf8().constData() << message.toUtf8().constData();
+        }
+    }
+
+    void javaScriptAlert(QWebFrame*, const QString& message) {
+        qDebug() << "[alert]  " << message.toUtf8().constData();
+    }
+
+    bool shouldInterruptJavaScript() {
+        return false;
+    }
+};
+
 void help(void) {
   printf("%s",
     " ------------------------------------------------------------------------------\n"
@@ -22,7 +54,6 @@ void help(void) {
     "  --url=<url>                    The URL to view (http:...|file:...|...)       \n"
     "  --app-name=<name>              appName used in User-Agent; default is none   \n"
     "  --app-version=<version>        appVers used in User-Agent; default is none   \n"
-  //"  --user-agent=<string>          Override the User-Agent header Qt would set   \n"
     "  --missing-image=<no|file>      Disable or change missing image icon          \n"
     "  --auto-load-images=<on|off>    Automatic image loading (default: on)         \n"
     "  --javascript=<on|off>          JavaScript execution (default: on)            \n"
@@ -59,13 +90,12 @@ int main(int argc, char *argv[]) {
     g.setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     g.setFrameStyle(QFrame::NoFrame);
     g.setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-    g.setViewport(new QGLWidget(/*QGLFormat(QGL::DirectRendering | QGL::DoubleBuffer | QGL::NoDepthBuffer | QGL::NoStencilBuffer | QGL::NoSampleBuffers)*/));
+    g.setViewport(new QGLWidget());
     g.showFullScreen();
 
-    QGraphicsWebView view;
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-//    view.setRenderHints(QPainter::SmoothPixmapTransform | QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::HighQualityAntialiasing);
-#endif
+    WebPage page;
+    GraphicsWebView view;
+    view.setPage(&page);
     view.resize(size);
 
     QWebSettings* settings = QWebSettings::globalSettings();
@@ -138,18 +168,14 @@ int main(int argc, char *argv[]) {
             webSettingAttribute(QWebSettings::SpatialNavigationEnabled, value);
         } else if (strncmp("--websecurity", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
-      //} else if (strncmp("--repaint-counter", s, nlen) == 0) {
-      //    webSettingAttribute(QWebSettings::RepaintCounter, value);
-      //} else if (strncmp("--render-borders", s, nlen) == 0) {
-      //    webSettingAttribute(QWebSettings::DebugBorder, value);
         } else if (strncmp("--inspector", s, nlen) == 0) {
-            view.page()->setProperty("_q_webInspectorServerPort", (unsigned int)atoi(value));
+            page.setProperty("_q_webInspectorServerPort", (unsigned int)atoi(value));
         } else if (strncmp("--http-proxy", s, nlen) == 0) {
             QUrl p = QUrl::fromEncoded(value);
             QNetworkProxy proxy = QNetworkProxy(QNetworkProxy::HttpProxy, p.host(), p.port(80), p.userName(), p.password());
             QNetworkAccessManager manager;
             manager.setProxy(proxy);
-            view.page()->setNetworkAccessManager(&manager);
+            page.setNetworkAccessManager(&manager);
         } else if (strncmp("--ini", s, nlen) == 0) {
             QSettings ini(value, QSettings::IniFormat);
             url = QUrl(ini.value("Network/firstUrl", QApplication::applicationDirPath()).toString());
