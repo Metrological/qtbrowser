@@ -89,6 +89,17 @@ int main(int argc, char *argv[]) {
         if (strcmp("--help", s) == 0) {
             help();
             return EXIT_FAILURE;
+        } else if (strcmp("--transparent", s) == 0) {
+            QPalette palette;
+            palette.setBrush(QPalette::Active, QPalette::Window, Qt::SolidPattern);
+            palette.setBrush(QPalette::Active, QPalette::Base, Qt::SolidPattern);
+            palette.setBrush(QPalette::Inactive, QPalette::Window, Qt::SolidPattern);
+            palette.setBrush(QPalette::Inactive, QPalette::Base, Qt::SolidPattern);
+            palette.setColor(QPalette::Active, QPalette::Window, QColor(0, 0, 0, 0));
+            palette.setColor(QPalette::Active, QPalette::Base, QColor(0, 0, 0, 0));
+            palette.setColor(QPalette::Inactive, QPalette::Window, QColor(0, 0, 0, 0));
+            palette.setColor(QPalette::Inactive, QPalette::Base, QColor(0, 0, 0, 0));
+            a.setPalette(palette);
         } else if (strcmp("--no-missing-image", s) == 0) {
             QWebSettings::globalSettings()->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap());
         }
