@@ -22,11 +22,16 @@ void help(void) {
     "  --url=<url>                    The URL to view (http:...|file:...|...)       \n"
     "  --app-name=<name>              appName used in User-Agent; default is none   \n"
     "  --app-version=<version>        appVers used in User-Agent; default is none   \n"
-    "  --user-agent=<string>          Override the User-Agent header Qt would set   \n"
-    "  --no-missing-image             Disable missing image icon in WebKit          \n"
+  //"  --user-agent=<string>          Override the User-Agent header Qt would set   \n"
+    "  --missing-image=<no|file>      Disable or change missing image icon          \n"
     "  --auto-load-images=<on|off>    Automatic image loading (default: on)         \n"
+    "  --javascript=<on|off>          JavaScript execution (default: on)            \n"
+    "  --private-browsing=<on|off>    Private browsing (default: off)               \n"
+    "  --spetial-navigation=<on|off>  Spatial Navigation (default: off)             \n"
+    "  --websecurity=<on|off>         WebSecurity (default: off)                    \n"
+    "  --inspector=<port>             Inspector (default: disabled)                 \n"
     "  --http-proxy=<url>             Address for HTTP proxy server (default: none) \n"
-    "  --insecure                     Ignore SSL/TLS certificate errors             \n"
+    "  --transparent                  Make Qt background color transparent          \n"
     " ------------------------------------------------------------------------------\n"
     " http://www.metrological.com - (c) 2014 Metrological - support@metrological.com\n"
     "");
@@ -63,7 +68,7 @@ int main(int argc, char *argv[]) {
 #endif
     view.resize(size);
 
-    QWebSettings *settings = QWebSettings::globalSettings();
+    QWebSettings* settings = QWebSettings::globalSettings();
     settings->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     settings->setAttribute(QWebSettings::WebGLEnabled, true);
@@ -79,6 +84,7 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
     settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, false);
     settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, false);
+    settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
     settings->setWebGraphic(QWebSettings::MissingPluginGraphic, QPixmap());
 
     const char* argUrl = NULL;
@@ -92,20 +98,25 @@ int main(int argc, char *argv[]) {
         // boolean options
         if (strcmp("--help", s) == 0) {
             help();
-            return a.exec();
+            return 0;
         } else if (strcmp("--transparent", s) == 0) {
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
             QPalette palette;
             palette.setBrush(QPalette::Active, QPalette::Window, Qt::SolidPattern);
             palette.setBrush(QPalette::Active, QPalette::Base, Qt::SolidPattern);
             palette.setBrush(QPalette::Inactive, QPalette::Window, Qt::SolidPattern);
             palette.setBrush(QPalette::Inactive, QPalette::Base, Qt::SolidPattern);
-            palette.setColor(QPalette::Active, QPalette::Window, QColor(0, 0, 0, 0));
-            palette.setColor(QPalette::Active, QPalette::Base, QColor(0, 0, 0, 0));
-            palette.setColor(QPalette::Inactive, QPalette::Window, QColor(0, 0, 0, 0));
-            palette.setColor(QPalette::Inactive, QPalette::Base, QColor(0, 0, 0, 0));
+            palette.setColor(QPalette::Active, QPalette::Window, Qt::transparent);
+            palette.setColor(QPalette::Active, QPalette::Base, Qt::transparent);
+            palette.setColor(QPalette::Inactive, QPalette::Window, Qt::transparent);
+            palette.setColor(QPalette::Inactive, QPalette::Base, Qt::transparent);
             a.setPalette(palette);
-        } else if (strcmp("--no-missing-image", s) == 0) {
-            settings->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap());
+#else
+            g.setAttribute(Qt::WA_TranslucentBackground,true);
+            g.setAttribute(Qt::WA_OpaquePaintEvent, false);
+            view.setAttribute(Qt::WA_OpaquePaintEvent, false);
+            view.setAttribute(Qt::WA_TranslucentBackground,true);
+#endif
         }
 
         value = strchr(s, '=');
@@ -118,6 +129,11 @@ int main(int argc, char *argv[]) {
             a.setApplicationName(value);
         } else if (strncmp("--app-version", s, nlen) == 0) {
             a.setApplicationVersion(value);
+        } else if (strncmp("--missing-image", s, nlen) == 0) {
+            if (strcmp(value, "no") == 0)
+                settings->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap());
+            else
+                settings->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap(QString(value)));
         } else if (strncmp("--auto-load-images", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::AutoLoadImages, value);
         } else if (strncmp("--javascript", s, nlen) == 0) {
@@ -128,6 +144,10 @@ int main(int argc, char *argv[]) {
             webSettingAttribute(QWebSettings::SpatialNavigationEnabled, value);
         } else if (strncmp("--websecurity", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
+      //} else if (strncmp("--repaint-counter", s, nlen) == 0) {
+      //    webSettingAttribute(QWebSettings::RepaintCounter, value);
+      //} else if (strncmp("--render-borders", s, nlen) == 0) {
+      //    webSettingAttribute(QWebSettings::DebugBorder, value);
         } else if (strncmp("--inspector", s, nlen) == 0) {
             view.page()->setProperty("_q_webInspectorServerPort", (unsigned int)atoi(value));
         } else if (strncmp("--http-proxy", s, nlen) == 0) {
@@ -145,5 +165,5 @@ int main(int argc, char *argv[]) {
 
     g.scene()->addItem(&view);
 
-    a.exec();
+    return a.exec();
 }
