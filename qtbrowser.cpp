@@ -42,8 +42,6 @@ void webSettingAttribute(QWebSettings::WebAttribute option, const QString& value
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
 
-    QNetworkAccessManager manager;
-
     QSize size = QApplication::desktop()->screenGeometry().size();
 
     QGraphicsView g;
@@ -67,6 +65,12 @@ int main(int argc, char *argv[]) {
 
     QWebSettings *settings = QWebSettings::globalSettings();
     settings->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    settings->setAttribute(QWebSettings::WebGLEnabled, true);
+#endif
+    settings->setAttribute(QWebSettings::PluginsEnabled, false);
+    settings->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
+    settings->setAttribute(QWebSettings::WebSecurityEnabled, false);
     settings->setAttribute(QWebSettings::LocalStorageEnabled, true);
     settings->enablePersistentStorage("/tmp/qtbrowser");
     settings->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
@@ -116,9 +120,16 @@ int main(int argc, char *argv[]) {
             webSettingAttribute(QWebSettings::AutoLoadImages, value);
         } else if (strncmp("--javascript", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::JavascriptEnabled, value);
+        } else if (strncmp("--spetial-navigation", s, nlen) == 0) {
+            webSettingAttribute(QWebSettings::SpatialNavigationEnabled, value);
+        } else if (strncmp("--websecurity", s, nlen) == 0) {
+            webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
+        } else if (strncmp("--inspector", s, nlen) == 0) {
+            view.page()->setProperty("_q_webInspectorServerPort", (unsigned int)atoi(value));
         } else if (strncmp("--http-proxy", s, nlen) == 0) {
             QUrl p = QUrl::fromEncoded(value);
             QNetworkProxy proxy = QNetworkProxy(QNetworkProxy::HttpProxy, p.host(), p.port(80), p.userName(), p.password());
+            QNetworkAccessManager manager;
             manager.setProxy(proxy);
             view.page()->setNetworkAccessManager(&manager);
         }
