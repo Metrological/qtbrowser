@@ -54,12 +54,12 @@ int main(int argc, char *argv[]) {
     g.setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     g.setFrameStyle(QFrame::NoFrame);
     g.setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-    g.setViewport(new QGLWidget(QGLFormat(QGL::DirectRendering | QGL::DoubleBuffer | QGL::NoDepthBuffer | QGL::NoStencilBuffer | QGL::NoSampleBuffers)));
+    g.setViewport(new QGLWidget(/*QGLFormat(QGL::DirectRendering | QGL::DoubleBuffer | QGL::NoDepthBuffer | QGL::NoStencilBuffer | QGL::NoSampleBuffers)*/));
     g.showFullScreen();
 
     QGraphicsWebView view;
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-    view.setRenderHints(QPainter::SmoothPixmapTransform | QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::HighQualityAntialiasing);
+//    view.setRenderHints(QPainter::SmoothPixmapTransform | QPainter::Antialiasing | QPainter::TextAntialiasing | QPainter::HighQualityAntialiasing);
 #endif
     view.resize(size);
 
@@ -77,6 +77,8 @@ int main(int argc, char *argv[]) {
     settings->setOfflineWebApplicationCachePath("/tmp/qtbrowser");
     settings->setOfflineWebApplicationCacheQuota(1024*1024*5);
     settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
+    settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, false);
+    settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, false);
     settings->setWebGraphic(QWebSettings::MissingPluginGraphic, QPixmap());
 
     const char* argUrl = NULL;
@@ -120,6 +122,8 @@ int main(int argc, char *argv[]) {
             webSettingAttribute(QWebSettings::AutoLoadImages, value);
         } else if (strncmp("--javascript", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::JavascriptEnabled, value);
+        } else if (strncmp("--private-browsing", s, nlen) == 0) {
+            webSettingAttribute(QWebSettings::PrivateBrowsingEnabled, value);
         } else if (strncmp("--spetial-navigation", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::SpatialNavigationEnabled, value);
         } else if (strncmp("--websecurity", s, nlen) == 0) {
