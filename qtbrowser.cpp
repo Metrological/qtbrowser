@@ -37,8 +37,6 @@ void webSettingAttribute(QWebSettings::WebAttribute option, const QString& value
         QWebSettings::globalSettings()->setAttribute(option, true);
     else if (value == "off")
         QWebSettings::globalSettings()->setAttribute(option, false);
-    else
-        (void)0;
 }
 
 int main(int argc, char *argv[]) {
@@ -47,8 +45,6 @@ int main(int argc, char *argv[]) {
     QNetworkAccessManager manager;
 
     QSize size = QApplication::desktop()->screenGeometry().size();
-
-    QWebSettings::globalSettings()->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
 
     QGraphicsView g;
     g.setScene(new QGraphicsScene(&g));
@@ -69,13 +65,15 @@ int main(int argc, char *argv[]) {
 #endif
     view.resize(size);
 
-    QWebSettings::globalSettings()->setAttribute(QWebSettings::LocalStorageEnabled, true);
-    QWebSettings::globalSettings()->enablePersistentStorage("/tmp/qtbrowser");
-    QWebSettings::globalSettings()->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
-    QWebSettings::globalSettings()->setOfflineWebApplicationCachePath("/tmp/qtbrowser");
-    QWebSettings::globalSettings()->setOfflineWebApplicationCacheQuota(1024*1024*5);
-    QWebSettings::globalSettings()->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
-    QWebSettings::globalSettings()->setWebGraphic(QWebSettings::MissingPluginGraphic, QPixmap());
+    QWebSettings *settings = QWebSettings::globalSettings();
+    settings->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
+    settings->setAttribute(QWebSettings::LocalStorageEnabled, true);
+    settings->enablePersistentStorage("/tmp/qtbrowser");
+    settings->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
+    settings->setOfflineWebApplicationCachePath("/tmp/qtbrowser");
+    settings->setOfflineWebApplicationCacheQuota(1024*1024*5);
+    settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
+    settings->setWebGraphic(QWebSettings::MissingPluginGraphic, QPixmap());
 
     const char* argUrl = NULL;
 
@@ -88,7 +86,7 @@ int main(int argc, char *argv[]) {
         // boolean options
         if (strcmp("--help", s) == 0) {
             help();
-            return EXIT_FAILURE;
+            return a.exec();
         } else if (strcmp("--transparent", s) == 0) {
             QPalette palette;
             palette.setBrush(QPalette::Active, QPalette::Window, Qt::SolidPattern);
@@ -101,7 +99,7 @@ int main(int argc, char *argv[]) {
             palette.setColor(QPalette::Inactive, QPalette::Base, QColor(0, 0, 0, 0));
             a.setPalette(palette);
         } else if (strcmp("--no-missing-image", s) == 0) {
-            QWebSettings::globalSettings()->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap());
+            settings->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap());
         }
 
         value = strchr(s, '=');
