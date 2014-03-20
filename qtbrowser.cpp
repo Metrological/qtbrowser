@@ -81,6 +81,7 @@ void help(void) {
     "  --spetial-navigation=<on|off>  Spatial Navigation (default: off)             \n"
     "  --websecurity=<on|off>         WebSecurity (default: off)                    \n"
     "  --inspector=<port>             Inspector (default: disabled)                 \n"
+    "  --max-cached-pages=<n>         Maximum pages in cache (default: 1)           \n"
     "  --pixmap-cache=<n>             Pixmap Cache size in MB (default: 20)         \n"
     "  --object-cache=<n,n,n>         Object Cache size in MB (default: 1,10,64)    \n"
     "  --http-proxy=<url>             Address for HTTP proxy server (default: none) \n"
@@ -123,6 +124,7 @@ int main(int argc, char *argv[]) {
     view.resize(size);
 
     QWebSettings* settings = QWebSettings::globalSettings();
+    settings->setMaximumPagesInCache(1);
     settings->setObjectCacheCapacities(1*1024*1024, 10*1024*1024, 64*1024*1024);
     settings->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
@@ -195,6 +197,8 @@ int main(int argc, char *argv[]) {
             webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
         } else if (strncmp("--inspector", s, nlen) == 0) {
             page.setProperty("_q_webInspectorServerPort", (unsigned int)atoi(value));
+        } else if (strncmp("--max-cached-pages", s, nlen) == 0) {
+            settings->setMaximumPagesInCache((unsigned int)atoi(value));
         } else if (strncmp("--pixmap-cache", s, nlen) == 0) {
             QPixmapCache::setCacheLimit((unsigned int)atoi(value) * 1024);
         } else if (strncmp("--object-cache", s, nlen) == 0) {
