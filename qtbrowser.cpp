@@ -81,6 +81,8 @@ void help(void) {
     "  --spetial-navigation=<on|off>  Spatial Navigation (default: off)             \n"
     "  --websecurity=<on|off>         WebSecurity (default: off)                    \n"
     "  --inspector=<port>             Inspector (default: disabled)                 \n"
+    "  --pixmap-cache=<n>             Pixmap Cache size in MB (default: 20)         \n"
+    "  --object-cache=<n,n,n>         Object Cache size in MB (default: 1,10,64)    \n"
     "  --http-proxy=<url>             Address for HTTP proxy server (default: none) \n"
     "  --transparent                  Make Qt background color transparent          \n"
     " ------------------------------------------------------------------------------\n"
@@ -113,12 +115,15 @@ int main(int argc, char *argv[]) {
     g.setViewport(new QGLWidget());
     g.showFullScreen();
 
+    QPixmapCache::setCacheLimit(20 * 1024);
+
     WebPage page;
     GraphicsWebView view;
     view.setPage(&page);
     view.resize(size);
 
     QWebSettings* settings = QWebSettings::globalSettings();
+    settings->setObjectCacheCapacities(1*1024*1024, 10*1024*1024, 64*1024*1024);
     settings->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
     settings->setAttribute(QWebSettings::WebGLEnabled, true);
@@ -190,6 +195,12 @@ int main(int argc, char *argv[]) {
             webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
         } else if (strncmp("--inspector", s, nlen) == 0) {
             page.setProperty("_q_webInspectorServerPort", (unsigned int)atoi(value));
+        } else if (strncmp("--pixmap-cache", s, nlen) == 0) {
+            QPixmapCache::setCacheLimit((unsigned int)atoi(value) * 1024);
+        } else if (strncmp("--object-cache", s, nlen) == 0) {
+            QStringList l = QString(value).split(",");
+            if (l.length() == 3)
+                settings->setObjectCacheCapacities(l.at(0).toInt()*1024*1024, l.at(1).toInt()*1024*1024, l.at(2).toInt()*1024*1024);
         } else if (strncmp("--http-proxy", s, nlen) == 0) {
             QUrl p = QUrl::fromEncoded(value);
             QNetworkProxy proxy = QNetworkProxy(QNetworkProxy::HttpProxy, p.host(), p.port(80), p.userName(), p.password());
