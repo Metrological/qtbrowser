@@ -78,7 +78,7 @@ void help(void) {
     "  --auto-load-images=<on|off>    Automatic image loading (default: on)         \n"
     "  --javascript=<on|off>          JavaScript execution (default: on)            \n"
     "  --private-browsing=<on|off>    Private browsing (default: off)               \n"
-    "  --spetial-navigation=<on|off>  Spatial Navigation (default: off)             \n"
+    "  --spatial-navigation=<on|off>  Spatial Navigation (default: off)             \n"
     "  --websecurity=<on|off>         WebSecurity (default: off)                    \n"
     "  --inspector=<port>             Inspector (default: disabled)                 \n"
     "  --max-cached-pages=<n>         Maximum pages in cache (default: 1)           \n"
@@ -199,7 +199,7 @@ int main(int argc, char *argv[]) {
             webSettingAttribute(QWebSettings::JavascriptEnabled, value);
         } else if (strncmp("--private-browsing", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::PrivateBrowsingEnabled, value);
-        } else if (strncmp("--spetial-navigation", s, nlen) == 0) {
+        } else if (strncmp("--spatial-navigation", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::SpatialNavigationEnabled, value);
         } else if (strncmp("--websecurity", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
