@@ -103,6 +103,13 @@ int main(int argc, char *argv[]) {
 
     QSize size = QApplication::desktop()->screenGeometry().size();
 
+    QString path;
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    path = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+#else
+    path = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+#endif
+
     QGraphicsView g;
     g.setScene(new QGraphicsScene(&g));
     g.resize(size);
@@ -134,10 +141,11 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
     settings->setAttribute(QWebSettings::WebSecurityEnabled, false);
     settings->setAttribute(QWebSettings::LocalStorageEnabled, true);
-    settings->enablePersistentStorage("/tmp/qtbrowser");
+    settings->enablePersistentStorage(path);
     settings->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
-    settings->setOfflineWebApplicationCachePath("/tmp/qtbrowser");
+    settings->setOfflineWebApplicationCachePath(path);
     settings->setOfflineWebApplicationCacheQuota(1024*1024*5);
+    settings->setOfflineStorageDefaultQuota(1024*1024*10);
     settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
     settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, false);
     settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, false);
