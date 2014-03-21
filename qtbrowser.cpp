@@ -149,8 +149,9 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
     settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, false);
     settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, false);
-  //settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
-  //settings->setAttribute(QWebSettings::FrameFlatteningEnable, true);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+    settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
+#endif
     settings->setWebGraphic(QWebSettings::MissingPluginGraphic, QPixmap());
 
     QUrl url;
