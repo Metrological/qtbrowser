@@ -143,7 +143,10 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::LocalStorageEnabled, true);
     settings->enablePersistentStorage(path);
     settings->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
-    settings->setOfflineWebApplicationCachePath(path);
+    // Building WebKit in debug wit trigger an assert for the next statement as it
+    // will set the persistent path for the second time. Not Allowed !!!
+    // First time it was set by the enablePersistentStorage call.
+    // settings->setOfflineWebApplicationCachePath(path);
     settings->setOfflineWebApplicationCacheQuota(1024*1024*5);
     settings->setOfflineStorageDefaultQuota(1024*1024*10);
     settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
