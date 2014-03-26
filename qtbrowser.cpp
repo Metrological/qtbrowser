@@ -27,15 +27,24 @@
 #endif
 
 #include <QNetworkProxy>
+#include <QNetworkReply>
 
 #include <QtOpenGL/QGLWidget>
 #include <QGraphicsWebView>
 
 #include <QWebSettings>
 
-class GraphicsWebView : public QGraphicsWebView {
-public:
+class SSLSlotHandler : public QObject {
+Q_OBJECT
+public slots:
+    void sslError(QNetworkReply* qnr, const QList<QSslError> & errlist) {
+        foreach (QSslError err, errlist)
+            qDebug() << "[ssl error]" << err;
+        qnr->ignoreSslErrors();
+    }
+};
 
+class GraphicsWebView : public QGraphicsWebView {
 protected:
     void contextMenuEvent(QGraphicsSceneContextMenuEvent* ev) {
         if (ev != NULL)
@@ -44,8 +53,6 @@ protected:
 };
 
 class WebPage : public QWebPage {
-public:
-
 protected:
     void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& source) {
         if (source.isEmpty()) {
@@ -86,6 +93,7 @@ void help(void) {
     "  --object-cache=<n,n,n>         Object Cache size in MB (default: 1,10,64)    \n"
     "  --http-proxy=<url>             Address for HTTP proxy server (default: none) \n"
     "  --transparent                  Make Qt background color transparent          \n"
+    "  --validate-ca=<on|off>         Validate Root CA certificates (default: on)   \n"
     " ------------------------------------------------------------------------------\n"
     " http://www.metrological.com - (c) 2014 Metrological - support@metrological.com\n"
     "");
@@ -143,10 +151,6 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::LocalStorageEnabled, true);
     settings->enablePersistentStorage(path);
     settings->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
-    // Building WebKit in debug wit trigger an assert for the next statement as it
-    // will set the persistent path for the second time. Not Allowed !!!
-    // First time it was set by the enablePersistentStorage call.
-    // settings->setOfflineWebApplicationCachePath(path);
     settings->setOfflineWebApplicationCacheQuota(1024*1024*5);
     settings->setOfflineStorageDefaultQuota(1024*1024*10);
     settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
@@ -219,13 +223,16 @@ int main(int argc, char *argv[]) {
                 settings->setObjectCacheCapacities(l.at(0).toInt()*1024*1024, l.at(1).toInt()*1024*1024, l.at(2).toInt()*1024*1024);
         } else if (strncmp("--http-proxy", s, nlen) == 0) {
             QUrl p = QUrl::fromEncoded(value);
+            QNetworkAccessManager* manager = page.networkAccessManager();
             QNetworkProxy proxy = QNetworkProxy(QNetworkProxy::HttpProxy, p.host(), p.port(80), p.userName(), p.password());
-            QNetworkAccessManager manager;
-            manager.setProxy(proxy);
-            page.setNetworkAccessManager(&manager);
+            manager->setProxy(proxy);
         } else if (strncmp("--ini", s, nlen) == 0) {
             QSettings ini(value, QSettings::IniFormat);
             url = QUrl(ini.value("Network/firstUrl", QApplication::applicationDirPath()).toString());
+        } else if (strncmp("--validate-ca", s, nlen) == 0) {
+            if (QString(value) == "off") {
+                QObject::connect(page.networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)), new SSLSlotHandler(), SLOT(sslError(QNetworkReply*, const QList<QSslError> &)));
+            }
         }
     }
 
@@ -237,3 +244,5 @@ int main(int argc, char *argv[]) {
 
     return a.exec();
 }
+
+#include "qtbrowser.moc"
