@@ -18,7 +18,7 @@
  *  <http://www.gnu.org/licenses/>.
  *
  **/
-#include <QtGui>
+#include <qglobal.h>
 
 #if (QT_VERSION < QT_VERSION_CHECK(5, 0, 0))
 #include <QtGui/QApplication>
@@ -28,11 +28,24 @@
 
 #include <QNetworkProxy>
 #include <QNetworkReply>
+#include <QNetworkAccessManager>
+#include <QSslError>
 
+#ifdef QT_OPENGL_LIB
 #include <QtOpenGL/QGLWidget>
+#endif
+#include <QGraphicsView>
+#include <QGraphicsScene>
 #include <QGraphicsWebView>
+#include <QGraphicsSceneContextMenuEvent>
 
+#include <QDesktopWidget>
+ 
 #include <QWebSettings>
+
+#include <QDesktopServices>
+#include <QPixmapCache>
+#include <QSettings>
 
 class SSLSlotHandler : public QObject {
 Q_OBJECT
@@ -128,7 +141,9 @@ int main(int argc, char *argv[]) {
     g.setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     g.setFrameStyle(QFrame::NoFrame);
     g.setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
+#ifdef QT_OPENGL_LIB
     g.setViewport(new QGLWidget());
+#endif
     g.showFullScreen();
 
     QPixmapCache::setCacheLimit(20 * 1024);
@@ -141,9 +156,13 @@ int main(int argc, char *argv[]) {
     QWebSettings* settings = QWebSettings::globalSettings();
     settings->setMaximumPagesInCache(1);
     settings->setObjectCacheCapacities(1*1024*1024, 10*1024*1024, 64*1024*1024);
+#ifdef QT_OPENGL_LIB
     settings->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
+#endif
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#ifdef QT_OPENGL_LIB
     settings->setAttribute(QWebSettings::WebGLEnabled, true);
+#endif
 #endif
     settings->setAttribute(QWebSettings::PluginsEnabled, false);
     settings->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
@@ -157,7 +176,9 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, false);
     settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, false);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#ifdef QT_OPENGL_LIB
     settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
+#endif
 #endif
     settings->setWebGraphic(QWebSettings::MissingPluginGraphic, QPixmap());
 
