@@ -3,7 +3,7 @@ TARGET      = qtbrowser
 
 SOURCES    += qtbrowser.cpp
 
-contains(DEFINES, QT_NO_OPENSSL) {
+contains(DEFINES, QT_NO_OPENSSL) || !contains(DEFINES, QT_OPENSSL) {
 error("QT_NO_OPENSSL, qtbrowser requires openssl support")
 }
 
