@@ -1,33 +1,41 @@
 TEMPLATE    = app
 TARGET      = qtbrowser
 
-SOURCES    += qtbrowser.cpp
+SOURCES     += qtbrowser.cpp
 
-!contains(DEFINES, QT_OPENGL_LIB) {
-warning("QT_OPENGL_LIB is not defined, qtbrowser might work but supported features and performance are limited")
+contains(QT_CONFIG, opengl) {
+   DEFINES += QT_BUILD_WITH_OPENGL
+} else {
+   warning("OpenGL support is not available, qtbrowser might work but supported features and performance are limited.")
+}
+
+#contains(QT_CONFIG, opengles1) {}
+#contains(QT_CONFIG, opengles2) {}
+#contains(QT_CONFIG, egl) {}
+
+contains(QT_CONFIG, openssl)|contains(QT_CONFIG, openssl-linked) {
+   message("Building with OpenSSL support")
+} else {
+   error("OpenSSL support is not available, qtbrowser requires OpenSSL.")
 }
 
 contains(QT_MAJOR_VERSION, 4) {
 
-contains(DEFINES, QT_NO_OPENSSL):!contains(DEFINES, QT_OPENSSL) {
-error("QT_NO_OPENSSL, qtbrowser requires openssl support")
-}
+   QT += \
+         webkit
 
-    QT += \
-	webkit
+   contains(QT_CONFIG, opengl){
+      QT += \ 
+            opengl
+   }
 
-contains(DEFINES, QT_OPENGL_LIB) {
-    QT += \ 
-	opengl
-}
-
+   message("Building for Qt4.")
 }
 
 contains(QT_MAJOR_VERSION, 5) {
 
-contains(DEFINES, QT_NO_SSL):!contains(DEFINES, QT_SSL) {
-error("QT_NO_OPENSSL, qtbrowser requires openssl support")
-}
+   QT += \
+         webkitwidgets
 
-    QT += webkitwidgets
+   message("Building for Qt5.")
 }
