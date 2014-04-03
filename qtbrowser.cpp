@@ -31,7 +31,7 @@
 #include <QNetworkAccessManager>
 #include <QSslError>
 
-#ifdef QT_OPENGL_LIB
+#ifdef QT_BUILD_WITH_OPENGL
 #include <QtOpenGL/QGLWidget>
 #endif
 #include <QGraphicsView>
@@ -141,7 +141,7 @@ int main(int argc, char *argv[]) {
     g.setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     g.setFrameStyle(QFrame::NoFrame);
     g.setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
-#ifdef QT_OPENGL_LIB
+#ifdef QT_BUILD_WITH_OPENGL
     g.setViewport(new QGLWidget());
 #endif
     g.showFullScreen();
@@ -156,11 +156,11 @@ int main(int argc, char *argv[]) {
     QWebSettings* settings = QWebSettings::globalSettings();
     settings->setMaximumPagesInCache(1);
     settings->setObjectCacheCapacities(1*1024*1024, 10*1024*1024, 64*1024*1024);
-#ifdef QT_OPENGL_LIB
+#ifdef QT_BUILD_WITH_OPENGL
     settings->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
 #endif
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-#ifdef QT_OPENGL_LIB
+#ifdef QT_BUILD_WITH_OPENGL
     settings->setAttribute(QWebSettings::WebGLEnabled, true);
 #endif
 #endif
@@ -176,7 +176,7 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, false);
     settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, false);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-#ifdef QT_OPENGL_LIB
+#ifdef QT_BUILD_WITH_OPENGL
     settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
 #endif
 #endif
