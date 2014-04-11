@@ -106,6 +106,11 @@ void help(void) {
     "  --object-cache=<n,n,n>         Object Cache size in MB (default: 1,10,64)    \n"
     "  --http-proxy=<url>             Address for HTTP proxy server (default: none) \n"
     "  --transparent                  Make Qt background color transparent          \n"
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#ifdef QT_BUILD_WITH_OPENGL
+    "  --tiled-backing-store          Enable tiled backing store                    \n"
+#endif
+#endif
     "  --validate-ca=<on|off>         Validate Root CA certificates (default: on)   \n"
     " ------------------------------------------------------------------------------\n"
     " http://www.metrological.com - (c) 2014 Metrological - support@metrological.com\n"
@@ -175,11 +180,6 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
     settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, false);
     settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, false);
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-#ifdef QT_BUILD_WITH_OPENGL
-    settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
-#endif
-#endif
     settings->setWebGraphic(QWebSettings::MissingPluginGraphic, QPixmap());
 
     QUrl url;
@@ -205,6 +205,12 @@ int main(int argc, char *argv[]) {
             palette.setColor(QPalette::Inactive, QPalette::Window, Qt::transparent);
             palette.setColor(QPalette::Inactive, QPalette::Base, Qt::transparent);
             a.setPalette(palette);
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#ifdef QT_BUILD_WITH_OPENGL
+        } else if (strcmp("--tiled-backing-store", s) == 0) {
+            settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
+#endif
+#endif
         }
 
         value = strchr(s, '=');
