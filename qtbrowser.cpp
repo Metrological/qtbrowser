@@ -106,6 +106,7 @@ void help(void) {
     "  --object-cache=<n,n,n>         Object Cache size in MB (default: 1,10,64)    \n"
     "  --http-proxy=<url>             Address for HTTP proxy server (default: none) \n"
     "  --transparent                  Make Qt background color transparent          \n"
+    "  --full-viewport-update         Set rendering to full viewport updating       \n"
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 #ifdef QT_BUILD_WITH_OPENGL
     "  --tiled-backing-store          Enable tiled backing store                    \n"
@@ -145,7 +146,6 @@ int main(int argc, char *argv[]) {
     g.setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     g.setAlignment(Qt::AlignTop | Qt::AlignHCenter);
     g.setFrameStyle(QFrame::NoFrame);
-    g.setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
 #ifdef QT_BUILD_WITH_OPENGL
     g.setViewport(new QGLWidget());
 #endif
@@ -211,6 +211,8 @@ int main(int argc, char *argv[]) {
             settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
 #endif
 #endif
+        } else if (strcmp("--full-viewport-update", s) == 0) {
+            g.setViewportUpdateMode(QGraphicsView::FullViewportUpdate);
         }
 
         value = strchr(s, '=');
