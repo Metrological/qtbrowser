@@ -47,6 +47,8 @@
 #include <QPixmapCache>
 #include <QSettings>
 
+static char sUserAgent[1024];
+
 class SSLSlotHandler : public QObject {
 Q_OBJECT
 public slots:
@@ -83,6 +85,13 @@ protected:
     bool shouldInterruptJavaScript() {
         return false;
     }
+
+    QString userAgentForUrl(const QUrl& url) const
+    {
+        if (sUserAgent)
+            return sUserAgent;
+        return QWebPage::userAgentForUrl(url);
+    }
 };
 
 void help(void) {
@@ -94,6 +103,7 @@ void help(void) {
     "  --url=<url>                    The URL to view (http:...|file:...|...)       \n"
     "  --app-name=<name>              appName used in User-Agent; default is none   \n"
     "  --app-version=<version>        appVers used in User-Agent; default is none   \n"
+    "  --user-agent=<string>          Set a custom User-Agent                       \n"
     "  --missing-image=<no|file>      Disable or change missing image icon          \n"
     "  --auto-load-images=<on|off>    Automatic image loading (default: on)         \n"
     "  --javascript=<on|off>          JavaScript execution (default: on)            \n"
@@ -225,6 +235,8 @@ int main(int argc, char *argv[]) {
             a.setApplicationName(value);
         } else if (strncmp("--app-version", s, nlen) == 0) {
             a.setApplicationVersion(value);
+        } else if (strncmp("--user-agent", s, nlen) == 0) {
+            strncpy(sUserAgent, value, strlen(value));
         } else if (strncmp("--missing-image", s, nlen) == 0) {
             if (strcmp(value, "no") == 0)
                 settings->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap());
