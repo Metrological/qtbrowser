@@ -47,9 +47,9 @@ void help(void) {
     " Usage: qtbrowser --url=http://www.example.org/                                \n"
     " ------------------------------------------------------------------------------\n"
     "  --help                         Print this help page and exit                 \n"
-
+#ifdef QT_BUILD_WITH_QML_API
     "  --webkit=<version>             WebKit mode (1=WK1 (default), 2=WK2)          \n"
-
+#endif
     "  --url=<url>                    The URL to view (http:...|file:...|...)       \n"
     "  --app-name=<name>              appName used in User-Agent; default is none   \n"
     "  --app-version=<version>        appVers used in User-Agent; default is none   \n"

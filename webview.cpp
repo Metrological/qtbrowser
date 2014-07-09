@@ -4,11 +4,13 @@
 #include <QtOpenGL/QGLWidget>
 #endif
 
+#ifdef QT_BUILD_WITH_QML_API
 #include <QCoreApplication>
 #include <QQmlProperty>
 #include <QQuickItem>
 
 #define QML_APP_NAME "browser.qml"
+#endif
 
 WebView* WebView::webview=NULL;
 
@@ -109,6 +111,7 @@ void WK1WebView::setFocus()
     g_webview.setFocus();
 }
 
+#ifdef QT_BUILD_WITH_QML_API
 WK2WebView::WK2WebView()
 {
     q_view.setSource(QUrl::fromLocalFile((QCoreApplication::applicationDirPath()+"/"+QML_APP_NAME)));
@@ -117,7 +120,6 @@ WK2WebView::WK2WebView()
     //Creation from a local file should be instant. Therefore we keep it simple.
     Q_ASSERT(q_view.status() == QQuickView::Ready);
 }
-
 
 WK2WebView& WK2WebView::instance(void)
 {
@@ -218,3 +220,4 @@ void WK2WebView::setFocus()
     if(property.isValid())
         property.write(false);
 }
+#endif

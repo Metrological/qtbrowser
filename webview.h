@@ -13,11 +13,9 @@
 #include <QGraphicsSceneContextMenuEvent>
 
 //WK2
-#include <QQmlComponent>
-#include <QQmlEngine>
-//#include <QQuickItem>
+#ifdef QT_BUILD_WITH_QML_API
 #include <QQuickView>
-
+#endif
 
 
 class WebView
