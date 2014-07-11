@@ -9,7 +9,16 @@
 #include <QQmlProperty>
 #include <QQuickItem>
 
-#define QML_APP_NAME "browser.qml"
+#define QML_URL "browser.qml"
+
+#define QML_DATA        \
+"\n"                    \
+"import QtQuick 2.0\n"  \
+"import QtWebKit 3.0\n" \
+"\n"                    \
+"WebView {\n"           \
+"    id : webView\n"    \
+"}"
 #endif
 
 WebView* WebView::webview=NULL;
@@ -112,13 +121,15 @@ void WK1WebView::setFocus()
 }
 
 #ifdef QT_BUILD_WITH_QML_API
-WK2WebView::WK2WebView()
+WK2WebView::WK2WebView() : component(&engine), object(NULL)
 {
-    q_view.setSource(QUrl::fromLocalFile((QCoreApplication::applicationDirPath()+"/"+QML_APP_NAME)));
-    q_view.setResizeMode(QQuickView::SizeRootObjectToView);
-
     //Creation from a local file should be instant. Therefore we keep it simple.
-    Q_ASSERT(q_view.status() == QQuickView::Ready);
+    component.setData(QByteArray(QML_DATA), QUrl(QML_URL));
+
+    Q_ASSERT(component.status() == QQmlComponent::Ready);
+
+    object = component.create();
+    Q_ASSERT(object!=0);
 }
 
 WK2WebView& WK2WebView::instance(void)
@@ -133,6 +144,8 @@ WK2WebView& WK2WebView::instance(void)
 
 WK2WebView::~WK2WebView()
 {
+    delete object;
+    object=NULL;
 }
 
 void WK2WebView::destroy(void)
@@ -153,7 +166,6 @@ void WK2WebView::setViewportUpdateMode(WebView::ViewportUpdateMode mode)
 
 void WK2WebView::resize(const QSize& _size_)
 {
-    QObject* object=dynamic_cast<QObject*>(q_view.rootObject());
     Q_ASSERT(object != NULL);
 
     QQmlProperty x(object, "x");
@@ -164,18 +176,17 @@ void WK2WebView::resize(const QSize& _size_)
     if(y.isValid())
         y.write(0);
 
-    QQmlProperty with(object, "width");
-    if(with.isValid())
-        with.write(_size_.width());
+    QQmlProperty width(object, "width");
+    if(width.isValid())
+        width.write(_size_.width());
 
-    QQmlProperty height(object, "width");
+    QQmlProperty height(object, "height");
     if(height.isValid())
         height.write(_size_.height());
 }
 
 void WK2WebView::load(const QUrl& _url_)
 {
-    QObject* object=dynamic_cast<QObject*>(q_view.rootObject());
     Q_ASSERT(object != NULL);
 
     QQmlProperty property(object, "url");
@@ -185,9 +196,6 @@ void WK2WebView::load(const QUrl& _url_)
 
 void WK2WebView::show()
 {
-    q_view.show();
-
-    QObject* object=dynamic_cast<QObject*>(q_view.rootObject());
     Q_ASSERT(object != NULL);
 
     QQmlProperty property(object, "visible");
@@ -200,9 +208,6 @@ void WK2WebView::hide()
     //No implementation
 
 /*
-    q_view.hide();
-
-    QObject* object=dynamic_cast<QObject*>(q_view.rootObject());
     Q_ASSERT(object != NULL);
 
     QQmlProperty property(object, "visible");
@@ -213,7 +218,6 @@ void WK2WebView::hide()
 
 void WK2WebView::setFocus()
 {
-    QObject* object=dynamic_cast<QObject*>(q_view.rootObject());
     Q_ASSERT(object != NULL);
 
     QQmlProperty property(object, "focus");

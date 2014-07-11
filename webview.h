@@ -14,9 +14,9 @@
 
 //WK2
 #ifdef QT_BUILD_WITH_QML_API
-#include <QQuickView>
+#include <QQmlEngine>
+#include <QQmlComponent>
 #endif
-
 
 class WebView
 {
@@ -105,6 +105,9 @@ private:
     WK2WebView(const WK2WebView&);
     WK2WebView& operator=(const WK2WebView&);
 
-    QQuickView q_view;
+    QQmlEngine engine;
+    QQmlComponent component;
+
+    QObject* object; //QQuickWebView
 };
 #endif // __WEBVIEW__

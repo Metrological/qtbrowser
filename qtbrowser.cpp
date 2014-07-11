@@ -148,8 +148,6 @@ int main(int argc, char *argv[]) {
     WebView& webview = dynamic_cast<WebView&>(WK1WebView::instance());
 #endif
 
-    webview.resize(size);
-
     for (int ax = 1; ax < argc; ++ax) {
         size_t nlen;
 
@@ -240,6 +238,7 @@ int main(int argc, char *argv[]) {
     }
 
     webview.load(url.isEmpty() ? QUrl("http://www.google.com") : url);
+    webview.resize(size);
     webview.setFocus();
     webview.show();
 
