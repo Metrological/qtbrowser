@@ -9,7 +9,7 @@
 #include <QQmlProperty>
 #include <QQuickItem>
 
-#define QML_URL "browser.qml"
+#define QML_URL ""
 
 #define QML_DATA        \
 "\n"                    \
@@ -121,15 +121,23 @@ void WK1WebView::setFocus()
 }
 
 #ifdef QT_BUILD_WITH_QML_API
-WK2WebView::WK2WebView() : component(&engine), object(NULL)
+WK2WebView::WK2WebView() : q_component(&q_engine), q_webview(NULL), q_view(&q_engine, NULL)
 {
     //Creation from a local file should be instant. Therefore we keep it simple.
-    component.setData(QByteArray(QML_DATA), QUrl(QML_URL));
+    q_component.setData(QByteArray(QML_DATA), QUrl(QML_URL));
 
-    Q_ASSERT(component.status() == QQmlComponent::Ready);
+    Q_ASSERT(q_component.status() == QQmlComponent::Ready);
 
-    object = component.create();
-    Q_ASSERT(object!=0);
+    q_webview = q_component.create();
+    Q_ASSERT(q_webview!=0);
+
+    q_view.setResizeMode(QQuickView::SizeViewToRootObject);
+
+    QQuickItem* q_item=dynamic_cast<QQuickItem*>(q_webview);
+    Q_ASSERT(q_item!=NULL);
+
+    //Add the qml item to the view
+    q_view.setContent(QUrl(QML_URL), &q_component, q_item);
 }
 
 WK2WebView& WK2WebView::instance(void)
@@ -144,8 +152,8 @@ WK2WebView& WK2WebView::instance(void)
 
 WK2WebView::~WK2WebView()
 {
-    delete object;
-    object=NULL;
+    delete q_webview;
+    q_webview=NULL;
 }
 
 void WK2WebView::destroy(void)
@@ -166,41 +174,43 @@ void WK2WebView::setViewportUpdateMode(WebView::ViewportUpdateMode mode)
 
 void WK2WebView::resize(const QSize& _size_)
 {
-    Q_ASSERT(object != NULL);
+    Q_ASSERT(q_webview != NULL);
 
-    QQmlProperty x(object, "x");
+    QQmlProperty x(q_webview, "x");
     if(x.isValid())
         x.write(0);
 
-    QQmlProperty y(object, "y");
+    QQmlProperty y(q_webview, "y");
     if(y.isValid())
         y.write(0);
 
-    QQmlProperty width(object, "width");
+    QQmlProperty width(q_webview, "width");
     if(width.isValid())
         width.write(_size_.width());
 
-    QQmlProperty height(object, "height");
+    QQmlProperty height(q_webview, "height");
     if(height.isValid())
         height.write(_size_.height());
 }
 
 void WK2WebView::load(const QUrl& _url_)
 {
-    Q_ASSERT(object != NULL);
+    Q_ASSERT(q_webview != NULL);
 
-    QQmlProperty property(object, "url");
+    QQmlProperty property(q_webview, "url");
     if(property.isValid())
         property.write(_url_);
 }
 
 void WK2WebView::show()
 {
-    Q_ASSERT(object != NULL);
+    Q_ASSERT(q_webview != NULL);
 
-    QQmlProperty property(object, "visible");
+    QQmlProperty property(q_webview, "visible");
     if(property.isValid())
         property.write(true);
+
+    q_view.show();
 }
 
 void WK2WebView::hide()
@@ -208,9 +218,11 @@ void WK2WebView::hide()
     //No implementation
 
 /*
-    Q_ASSERT(object != NULL);
+    q_view.hide();
 
-    QQmlProperty property(object, "visible");
+    Q_ASSERT(q_webview != NULL);
+
+    QQmlProperty property(q_webview, "visible");
     if(property.isValid())
         property.write(false);
 */
@@ -218,9 +230,9 @@ void WK2WebView::hide()
 
 void WK2WebView::setFocus()
 {
-    Q_ASSERT(object != NULL);
+    Q_ASSERT(q_webview != NULL);
 
-    QQmlProperty property(object, "focus");
+    QQmlProperty property(q_webview, "focus");
     if(property.isValid())
         property.write(false);
 }

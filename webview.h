@@ -14,6 +14,7 @@
 
 //WK2
 #ifdef QT_BUILD_WITH_QML_API
+#include <QQuickView>
 #include <QQmlEngine>
 #include <QQmlComponent>
 #endif
@@ -105,9 +106,10 @@ private:
     WK2WebView(const WK2WebView&);
     WK2WebView& operator=(const WK2WebView&);
 
-    QQmlEngine engine;
-    QQmlComponent component;
+    QQmlEngine q_engine;
+    QQmlComponent q_component;
 
-    QObject* object; //QQuickWebView
+    QObject* q_webview; //QQuickWebView
+    QQuickView q_view;  //A view, i.e. scenegraph, to display the contents
 };
 #endif // __WEBVIEW__
