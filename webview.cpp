@@ -2,10 +2,10 @@
 
 #ifdef QT_BUILD_WITH_OPENGL
 #include <QtOpenGL/QGLWidget>
+#include <QCoreApplication>
 #endif
 
 #ifdef QT_BUILD_WITH_QML_API
-#include <QCoreApplication>
 #include <QQmlProperty>
 #include <QQuickItem>
 
@@ -62,6 +62,12 @@ WK1WebView::WK1WebView()
     g_view.showFullScreen();
 
     g_view.scene()->addItem(&g_webview);
+
+#ifdef QT_BUILD_WITH_OPENGL
+    QCoreApplication* app = QCoreApplication::instance();
+    Q_ASSERT(NULL != app);
+    app->installEventFilter(&g_view);
+#endif
 }
 
 WK1WebView& WK1WebView::instance(void)
@@ -76,6 +82,11 @@ WK1WebView& WK1WebView::instance(void)
 
 WK1WebView::~WK1WebView()
 {
+#ifdef QT_BUILD_WITH_OPENGL
+    QCoreApplication* app = QCoreApplication::instance();
+    Q_ASSERT(NULL != app);
+    app->removeEventFilter(&g_view);
+#endif
 }
 
 void WK1WebView::destroy(void)

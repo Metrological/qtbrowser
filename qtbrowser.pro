@@ -5,11 +5,13 @@ HEADERS     += \
                sslhandler.h \
                webpage.h \
                graphicswebview.h \
+               graphicsview.h \
                webview.h
 SOURCES     += \
                sslhandler.cpp \
                webpage.cpp \
                graphicswebview.cpp \
+               graphicsview.cpp \
                webview.cpp \
                qtbrowser.cpp
 

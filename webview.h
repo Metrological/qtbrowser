@@ -3,14 +3,9 @@
 
 #include "webpage.h"
 
-//WK1 ?
-#include "graphicswebview.h"
-
 //WK1
-#include <QGraphicsView>
-#include <QGraphicsScene>
-#include <QGraphicsWebView>
-#include <QGraphicsSceneContextMenuEvent>
+#include "graphicsview.h"
+#include "graphicswebview.h"
 
 //WK2
 #ifdef QT_BUILD_WITH_QML_API
@@ -78,7 +73,7 @@ private:
     WK1WebView(const WK1WebView&);
     WK1WebView& operator=(const WK1WebView&);
 
-    QGraphicsView g_view;
+    GraphicsView g_view;
     GraphicsWebView g_webview;
 };
 
