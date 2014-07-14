@@ -237,6 +237,8 @@ int main(int argc, char *argv[]) {
         }
     }
 
+    webview.initialize();
+
     webview.load(url.isEmpty() ? QUrl("http://www.google.com") : url);
     webview.resize(size);
     webview.setFocus();

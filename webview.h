@@ -6,6 +6,9 @@
 //WK1
 #include "graphicsview.h"
 #include "graphicswebview.h"
+#ifdef QT_BUILD_WITH_OPENGL
+#include <QtOpenGL/QGLWidget>
+#endif
 
 //WK2
 #ifdef QT_BUILD_WITH_QML_API
@@ -22,6 +25,9 @@ public:
     static WebView& instance(void);
     virtual ~WebView();
 
+    virtual bool initialize(void);
+    virtual void destroy(void) = 0;
+
     WebPage& page(void);
 
     virtual void load(const QUrl& url) = 0;
@@ -34,8 +40,6 @@ public:
     virtual void setFocus(void) = 0;
 
     virtual void setViewportUpdateMode(WebView::ViewportUpdateMode) = 0;
-
-    virtual void destroy(void) = 0;
 
 protected:
     WebView();
@@ -55,6 +59,9 @@ public:
     static WK1WebView& instance(void);
     virtual ~WK1WebView();
 
+    bool initialize(void);
+    void destroy(void);
+
     void resize(const QSize &);
 
     void load(const QUrl& url);
@@ -66,15 +73,17 @@ public:
 
     void setViewportUpdateMode(WebView::ViewportUpdateMode mode);
 
-    void destroy(void);
-
 private:
     WK1WebView();
     WK1WebView(const WK1WebView&);
     WK1WebView& operator=(const WK1WebView&);
 
-    GraphicsView g_view;
     GraphicsWebView g_webview;
+    GraphicsView g_view;
+    QGraphicsScene g_scene;
+#ifdef QT_BUILD_WITH_OPENGL
+    QGLWidget g_viewport;
+#endif
 };
 
 class WK2WebView : public WebView
@@ -83,6 +92,9 @@ public:
     static WK2WebView& instance(void);
     virtual ~WK2WebView();
 
+    bool initialize(void);
+    void destroy(void);
+
     void resize(const QSize &);
 
     void load(const QUrl& url);
@@ -93,8 +105,6 @@ public:
     void setFocus(void);
 
     void setViewportUpdateMode(WebView::ViewportUpdateMode mode);
-
-    void destroy(void);
 
 private:
     WK2WebView();
