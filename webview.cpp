@@ -245,6 +245,6 @@ void WK2WebView::setFocus()
 
     QQmlProperty property(q_webview, "focus");
     if(property.isValid())
-        property.write(false);
+        property.write(true);
 }
 #endif
