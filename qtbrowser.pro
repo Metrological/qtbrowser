@@ -1,7 +1,19 @@
 TEMPLATE    = app
 TARGET      = qtbrowser
 
-SOURCES     += qtbrowser.cpp
+HEADERS     += \
+               sslhandler.h \
+               webpage.h \
+               graphicswebview.h \
+               graphicsview.h \
+               webview.h
+SOURCES     += \
+               sslhandler.cpp \
+               webpage.cpp \
+               graphicswebview.cpp \
+               graphicsview.cpp \
+               webview.cpp \
+               qtbrowser.cpp
 
 contains(QT_CONFIG, opengl) {
    DEFINES += QT_BUILD_WITH_OPENGL
@@ -49,6 +61,17 @@ contains(QT_MAJOR_VERSION, 5) {
 
    QT += \
          webkitwidgets
+
+   qtHaveModule(quick):qtHaveModule(qml) {
+      message("Modules qml and quick found.")
+ 
+     QT += \
+         qml quick
+
+     DEFINES += QT_BUILD_WITH_QML_API
+   } else {
+      warning("QtQuick/QML API might not be supported.")
+   }
 
    message("Building for Qt5.")
 }
