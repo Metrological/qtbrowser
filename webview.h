@@ -86,6 +86,7 @@ private:
 #endif
 };
 
+#ifdef QT_BUILD_WITH_QML_API
 class WK2WebView : public WebView
 {
 public:
@@ -117,4 +118,5 @@ private:
     QObject* q_webview; //QQuickWebView
     QQuickView q_view;  //A view, i.e. scenegraph, to display the contents
 };
+#endif
 #endif // __WEBVIEW__
