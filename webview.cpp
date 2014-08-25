@@ -1,8 +1,6 @@
 #include "webview.h"
 
-#ifdef QT_BUILD_WITH_OPENGL
-#include <QCoreApplication>
-#endif
+#include <QApplication>
 
 #ifdef QT_BUILD_WITH_QML_API
 #include <QQmlProperty>
@@ -14,13 +12,11 @@
 "\n"                    \
 "import QtQuick 2.0\n"  \
 "import QtWebKit 3.0\n" \
-"\n"                    \
+"import QtWebKit.experimental 1.0\n"\
 "WebView {\n"           \
 "    id : webView\n"    \
 "}"
 #endif
-
-WebView* WebView::webview=NULL;
 
 WebView::WebView()
 {}
@@ -31,43 +27,18 @@ WebView::WebView(const WebView&)
 WebView& WebView::operator=(const WebView&)
 {}
 
-WebView& WebView::instance(void)
-{
-    return *webview;
-}
-
-bool WebView::initialize(void)
-{
-//    _size_ = QSize(0,0);
-    return true;
-}
-
 WebView::~WebView()
 {
-    webview=NULL;
-}
-
-WebPage& WebView::page(void)
-{
-    return _page_;
 }
 
 WK1WebView::WK1WebView() : g_scene(&g_view)
 {
 }
 
-WK1WebView& WK1WebView::instance(void)
-{
-    if (webview==NULL)
-        webview = new WK1WebView();
-
-    Q_ASSERT(NULL != webview);
-
-    return dynamic_cast<WK1WebView&>(WebView::instance()); 
-}
-
 bool WK1WebView::initialize(void)
 {
+//TODO: initialize settings
+
     g_webview.setUrl(QUrl(""));
 
     g_scene.setItemIndexMethod(QGraphicsScene::NoIndex);
@@ -103,9 +74,14 @@ WK1WebView::~WK1WebView()
 #endif
 }
 
-void WK1WebView::destroy(void)
+WebPage& WK1WebView::page(void)
 {
-    delete dynamic_cast<WK1WebView*>(webview);
+    return _page_;
+}
+
+WebSettings& WK1WebView::settings()
+{
+    return _settings_;
 }
 
 void WK1WebView::setViewportUpdateMode(WebView::ViewportUpdateMode mode)
@@ -137,44 +113,66 @@ void WK1WebView::show()
 
 void WK1WebView::hide()
 {
-    //No implementation
+    // No implementation
 }
 
-void WK1WebView::setFocus()
+void WK1WebView::setVisible(bool enable)
 {
+    Q_UNUSED(enable);
+    // No implementation
+}
+
+void WK1WebView::setFocus(bool enable)
+{
+    Q_UNUSED(enable);
+
     g_webview.setFocus();
 }
 
-#ifdef QT_BUILD_WITH_QML_API
-WK2WebView::WK2WebView() : q_component(&q_engine), q_webview(NULL), q_view(&q_engine, NULL)
+void WK1WebView::setTransparentBackground(bool enable)
 {
-    //Creation from a local file should be instant. Therefore we keep it simple.
-    q_component.setData(QByteArray(QML_DATA), QUrl(QML_URL));
-    Q_ASSERT(QQmlComponent::Ready == q_component.status());
+   Q_UNUSED(enable)
 
-    q_webview = q_component.create();
-    Q_ASSERT(NULL != q_webview);
+    QPalette palette;
+    palette.setBrush(QPalette::Active, QPalette::Window, Qt::SolidPattern);
+    palette.setBrush(QPalette::Active, QPalette::Base, Qt::SolidPattern);
+    palette.setBrush(QPalette::Inactive, QPalette::Window, Qt::SolidPattern);
+    palette.setBrush(QPalette::Inactive, QPalette::Base, Qt::SolidPattern);
+    palette.setColor(QPalette::Active, QPalette::Window, Qt::transparent);
+    palette.setColor(QPalette::Active, QPalette::Base, Qt::transparent);
+    palette.setColor(QPalette::Inactive, QPalette::Window, Qt::transparent);
+    palette.setColor(QPalette::Inactive, QPalette::Base, Qt::transparent);
+
+    QApplication* app = dynamic_cast<QApplication*>(QCoreApplication::instance());
+    Q_ASSERT(NULL != app);
+
+    app->setPalette(palette);
 }
 
-WK2WebView& WK2WebView::instance(void)
+#ifdef QT_BUILD_WITH_QML_API
+WK2WebView::WK2WebView() : _settings_(*this), q_component(&q_engine), q_webview(NULL), q_view(&q_engine, NULL)
 {
-    if (webview==NULL)
-        webview = new WK2WebView();
+    // Creation from a local file should be instant. Therefore we keep it simple.
+    q_component.setData(QByteArray(QML_DATA), QUrl(QML_URL));
 
-    Q_ASSERT(NULL != webview);
+    q_webview = q_component.create();
+    Q_ASSERT(QQmlComponent::Ready == q_component.status());
 
-    return dynamic_cast<WK2WebView&>(WebView::instance()); 
+    Q_ASSERT(NULL != q_webview);
 }
 
 bool WK2WebView::initialize(void)
 {
-    q_view.setResizeMode(QQuickView::SizeViewToRootObject);
+//TODO: initialize settings
 
     Q_ASSERT(NULL != q_webview);
+
     QQuickItem* q_item=dynamic_cast<QQuickItem*>(q_webview);
     Q_ASSERT(NULL != q_item);
 
-    //Add the qml item to the view
+    q_view.setResizeMode(QQuickView::SizeViewToRootObject);
+
+    // Add the qml item to the view
     q_view.setContent(QUrl(QML_URL), &q_component, q_item);
 
     return true;
@@ -183,12 +181,17 @@ bool WK2WebView::initialize(void)
 WK2WebView::~WK2WebView()
 {
     delete q_webview;
-    q_webview=NULL;
+    q_webview = NULL;
 }
 
-void WK2WebView::destroy(void)
+WebPage& WK2WebView::page(void)
 {
-    delete dynamic_cast<WK2WebView*>(webview);
+    return _page_;
+}
+
+WebSettings& WK2WebView::settings()
+{
+    return _settings_;
 }
 
 void WK2WebView::setViewportUpdateMode(WebView::ViewportUpdateMode mode)
@@ -196,7 +199,7 @@ void WK2WebView::setViewportUpdateMode(WebView::ViewportUpdateMode mode)
     switch(mode)
     {
         case FullViewport :
-            //No implementation
+            // No implementation
             break;
         default           :;
     }
@@ -207,19 +210,19 @@ void WK2WebView::resize(const QSize& _size_)
     Q_ASSERT(NULL != q_webview);
 
     QQmlProperty x(q_webview, "x");
-    if(x.isValid())
+    if(true == x.isValid())
         x.write(0);
 
     QQmlProperty y(q_webview, "y");
-    if(y.isValid())
+    if(true == y.isValid())
         y.write(0);
 
     QQmlProperty width(q_webview, "width");
-    if(width.isValid())
+    if(true == width.isValid())
         width.write(_size_.width());
 
     QQmlProperty height(q_webview, "height");
-    if(height.isValid())
+    if(true == height.isValid())
         height.write(_size_.height());
 }
 
@@ -228,32 +231,47 @@ void WK2WebView::load(const QUrl& _url_)
     Q_ASSERT(NULL != q_webview);
 
     QQmlProperty property(q_webview, "url");
-    if(property.isValid())
+    if(true == property.isValid())
         property.write(_url_);
 }
 
 void WK2WebView::show()
 {
-    Q_ASSERT(NULL != q_webview);
-
-    QQmlProperty property(q_webview, "visible");
-    if(property.isValid())
-        property.write(true);
-
+    setVisible(true);
     q_view.show();
 }
 
 void WK2WebView::hide()
 {
-    //No implementation
+    setVisible(false);
+    q_view.hide();
 }
 
-void WK2WebView::setFocus()
+void WK2WebView::setVisible(bool enable)
+{
+    Q_ASSERT(NULL != q_webview);
+
+    QQmlProperty property(q_webview, "visible");
+    if(true == property.isValid())
+        property.write(enable);
+}
+
+void WK2WebView::setFocus(bool enable)
 {
     Q_ASSERT(NULL != q_webview);
 
     QQmlProperty property(q_webview, "focus");
-    if(property.isValid())
-        property.write(true);
+    if(true == property.isValid())
+        property.write(enable);
+}
+
+void WK2WebView::setTransparentBackground(bool enable)
+{
+    Q_ASSERT(NULL != q_webview);
+
+    QQmlProperty property(q_webview, "experimental.transparentBackground");
+
+    if(true == property.isValid())
+        property.write(enable);
 }
 #endif

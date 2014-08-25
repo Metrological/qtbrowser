@@ -38,8 +38,14 @@
 #include <QPixmapCache>
 #include <QSettings>
 
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#include <QStandardPaths>
+#endif
+
 #include "webview.h"
 #include "sslhandler.h"
+
+#include <QtWebCustomPaths.h>
 
 void help(void) {
   printf("%s",
@@ -73,19 +79,30 @@ void help(void) {
 #endif
 #endif
     "  --validate-ca=<on|off>         Validate Root CA certificates (default: on)   \n"
+    "  --persistent-storage=<path>    Set icon database, local storage, offline     \n"
+    "                                 storage and web-application cache path        \n"
+    "  --cookie-storage=<path>        Set cookie storage path                       \n"
     " ------------------------------------------------------------------------------\n"
     " http://www.metrological.com - (c) 2014 Metrological - support@metrological.com\n"
     "");
 }
 
-void webSettingAttribute(QWebSettings::WebAttribute option, const QString& value) {
-    if (value == "on")
-        QWebSettings::globalSettings()->setAttribute(option, true);
-    else if (value == "off")
-        QWebSettings::globalSettings()->setAttribute(option, false);
+void print_notice(void)
+{
+    printf("%s",
+#ifdef QT_BUILD_WITH_QML_API
+    "-------------------------------------------------------------------------------\n"
+    "WARNING: This version of qtbrowser is not production ready. Not all features   \n"
+    "         are currently supported in both WebKit modes (when enabled) . Many    \n"
+    "         things might change without prior notice.                             \n"
+    "-------------------------------------------------------------------------------\n"
+#endif
+    "");
 }
 
 int main(int argc, char *argv[]) {
+    print_notice();
+
     QApplication a(argc, argv);
 
     QSize size = QApplication::desktop()->screenGeometry().size();
@@ -97,56 +114,62 @@ int main(int argc, char *argv[]) {
     path = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
 #endif
 
-    QPixmapCache::setCacheLimit(20 * 1024);
-
-    QWebSettings* settings = QWebSettings::globalSettings();
-    settings->setMaximumPagesInCache(1);
-    settings->setObjectCacheCapacities(1*1024*1024, 10*1024*1024, 64*1024*1024);
-#ifdef QT_BUILD_WITH_OPENGL
-    settings->setAttribute(QWebSettings::AcceleratedCompositingEnabled, true);
-#endif
-#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-#ifdef QT_BUILD_WITH_OPENGL
-    settings->setAttribute(QWebSettings::WebGLEnabled, true);
-#endif
-#endif
-    settings->setAttribute(QWebSettings::PluginsEnabled, false);
-    settings->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
-    settings->setAttribute(QWebSettings::WebSecurityEnabled, false);
-    settings->setAttribute(QWebSettings::LocalStorageEnabled, true);
-    settings->enablePersistentStorage(path);
-    settings->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
-    settings->setOfflineWebApplicationCacheQuota(1024*1024*5);
-    settings->setOfflineStorageDefaultQuota(1024*1024*10);
-    settings->setAttribute(QWebSettings::OfflineStorageDatabaseEnabled, true);
-    settings->setAttribute(QWebSettings::JavascriptCanOpenWindows, false);
-    settings->setAttribute(QWebSettings::JavascriptCanAccessClipboard, false);
-    settings->setWebGraphic(QWebSettings::MissingPluginGraphic, QPixmap());
-
-    QUrl url;
-
-#ifdef QT_BUILD_WITH_QML_API
-    // First argument should be WebKit mode otherwise fallback to default 
     int mode = 1; 
-    if (1 < argc)
-    { 
+    for (int ax = 1; ax < argc; ++ax) {
+
        size_t nlen;
 
-       const char* s = argv[1];
+       const char* s = argv[ax];
        const char* value;
 
        value = strchr(s, '=');
        nlen = value++ - s;
 
-        if (strncmp("--webkit", s, nlen) == 0)
+#ifdef QT_BUILD_WITH_QML_API
+        if (strncmp("--webkit", s, nlen) == 0) {
             if (strncmp("2", value, 1) == 0)
                 mode = 2;
+        } else if (strncmp("--persistent-storage", s, nlen) == 0) {
+            QtWebCustomPaths& custompaths = QtWebCustomPaths::instance();
+            custompaths.setPath(QtWebCustomPaths::PersistentStorage, value);
+         } else if (strncmp("--cookie-storage", s, nlen) == 0) {
+            QtWebCustomPaths& custompaths = QtWebCustomPaths::instance();
+            custompaths.setPath(QtWebCustomPaths::CookieStorage, value);
+        }
+#endif
     }
 
-    WebView& webview = (mode==2) ? dynamic_cast<WebView&>(WK2WebView::instance()) : dynamic_cast<WebView&>(WK1WebView::instance());
-#else
-    WebView& webview = dynamic_cast<WebView&>(WK1WebView::instance());
+    WebView& webview = (mode==2) ? dynamic_cast<WebView&>(*new WK2WebView) : dynamic_cast<WebView&>(*new WK1WebView);
+
+#ifdef QT_BUILD_WITH_OPENGL
+    webview.settings().setAttribute(WebSettings::AcceleratedCompositing, true);
 #endif
+#if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
+#ifdef QT_BUILD_WITH_OPENGL
+    webview.settings().setAttribute(WebSettings::WebGL, true);
+#endif
+#endif
+    webview.settings().setAttribute(WebSettings::LocalStorage, true);
+
+    webview.settings().setStorage(WebSettings::Persistent, path); // Ineffective for WK2
+    webview.settings().setStorage(WebSettings::Cookie, path); // Ineffective for WK2
+
+    webview.settings().setMaximumPagesInCache(1);
+    webview.settings().setObjectCacheCapacities(1*1024*1024, 10*1024*1024, 64*1024*1024);
+    webview.settings().setOfflineWebApplicationCacheQuota(1024*1024*5);
+    webview.settings().setOfflineStorageDefaultQuota(1024*1024*10);
+
+    webview.settings().setAttribute(WebSettings::OfflineWebApplicationCache, true);
+    webview.settings().setAttribute(WebSettings::OfflineStorage, true);
+    webview.settings().setAttribute(WebSettings::JavaScriptCanOpenWindow, false);
+    webview.settings().setAttribute(WebSettings::JavaScriptCanAccessClipBoard, false);
+
+    QString resource(""); 
+    webview.settings().setGraphic(WebSettings::MissingPlugin, resource);
+
+    QPixmapCache::setCacheLimit(20 * 1024);
+
+    QUrl url;
 
     for (int ax = 1; ax < argc; ++ax) {
         size_t nlen;
@@ -159,20 +182,11 @@ int main(int argc, char *argv[]) {
             help();
             return 0;
         } else if (strcmp("--transparent", s) == 0) {
-            QPalette palette;
-            palette.setBrush(QPalette::Active, QPalette::Window, Qt::SolidPattern);
-            palette.setBrush(QPalette::Active, QPalette::Base, Qt::SolidPattern);
-            palette.setBrush(QPalette::Inactive, QPalette::Window, Qt::SolidPattern);
-            palette.setBrush(QPalette::Inactive, QPalette::Base, Qt::SolidPattern);
-            palette.setColor(QPalette::Active, QPalette::Window, Qt::transparent);
-            palette.setColor(QPalette::Active, QPalette::Base, Qt::transparent);
-            palette.setColor(QPalette::Inactive, QPalette::Window, Qt::transparent);
-            palette.setColor(QPalette::Inactive, QPalette::Base, Qt::transparent);
-            a.setPalette(palette);
+            webview.setTransparentBackground();
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 #ifdef QT_BUILD_WITH_OPENGL
         } else if (strcmp("--tiled-backing-store", s) == 0) {
-            settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
+            webview.settings().setAttribute(WebSettings::TiledBackingStore, true);
 #endif
 #endif
         } else if (strcmp("--full-viewport-update", s) == 0) {
@@ -190,37 +204,35 @@ int main(int argc, char *argv[]) {
         } else if (strncmp("--app-version", s, nlen) == 0) {
             a.setApplicationVersion(value);
         } else if (strncmp("--user-agent", s, nlen) == 0) {
-            WebPage& page = webview.page();
-//TODO: order of arguments might be important
+//WK1
+           WebPage& page = webview.page();
             if(!url.isEmpty())
                 page.setUserAgentForUrl(url, value);
         } else if (strncmp("--missing-image", s, nlen) == 0) {
-            if (strcmp(value, "no") == 0)
-                settings->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap());
-            else
-                settings->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap(QString(value)));
+            QString resource(value);
+            webview.settings().setGraphic(WebSettings::MissingImage, resource);
         } else if (strncmp("--auto-load-images", s, nlen) == 0) {
-            webSettingAttribute(QWebSettings::AutoLoadImages, value);
+            webview.settings().setAttribute(WebSettings::AutoLoadImages, (QString(value)=="on" ? true: false));
         } else if (strncmp("--javascript", s, nlen) == 0) {
-            webSettingAttribute(QWebSettings::JavascriptEnabled, value);
+            webview.settings().setAttribute(WebSettings::JavaScript, (QString(value)=="on" ? true : false));
         } else if (strncmp("--private-browsing", s, nlen) == 0) {
-            webSettingAttribute(QWebSettings::PrivateBrowsingEnabled, value);
+            webview.settings().setAttribute(WebSettings::PrivateBrowsing, (QString(value)=="on" ? true : false));
         } else if (strncmp("--spatial-navigation", s, nlen) == 0) {
-            webSettingAttribute(QWebSettings::SpatialNavigationEnabled, value);
+            webview.settings().setAttribute(WebSettings::SpatialNavigation, (QString(value)=="on" ? true : false));
         } else if (strncmp("--websecurity", s, nlen) == 0) {
-            webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
+            webview.settings().setAttribute(WebSettings::WebSecurity, ((QString(value)=="on") ? true : false));
         } else if (strncmp("--inspector", s, nlen) == 0) {
-            QWebPage& page = dynamic_cast<QWebPage&> ( webview.page() );
-            page.setProperty("_q_webInspectorServerPort", (unsigned int)atoi(value));
+            webview.settings().setRemoteInspector((unsigned int)atoi(value));
         } else if (strncmp("--max-cached-pages", s, nlen) == 0) {
-            settings->setMaximumPagesInCache((unsigned int)atoi(value));
+            webview.settings().setMaximumPagesInCache(atoi(value));
         } else if (strncmp("--pixmap-cache", s, nlen) == 0) {
             QPixmapCache::setCacheLimit((unsigned int)atoi(value) * 1024);
         } else if (strncmp("--object-cache", s, nlen) == 0) {
             QStringList l = QString(value).split(",");
             if (l.length() == 3)
-                settings->setObjectCacheCapacities(l.at(0).toInt()*1024*1024, l.at(1).toInt()*1024*1024, l.at(2).toInt()*1024*1024);
+                webview.settings().setObjectCacheCapacities(l.at(0).toInt()*1024*1024, l.at(1).toInt()*1024*1024, l.at(2).toInt()*1024*1024);
         } else if (strncmp("--http-proxy", s, nlen) == 0) {
+//WK1 
             QUrl p = QUrl::fromEncoded(value);
             QWebPage& page = dynamic_cast<QWebPage&> ( webview.page() );
             QNetworkAccessManager* manager = page.networkAccessManager();
@@ -230,10 +242,17 @@ int main(int argc, char *argv[]) {
             QSettings ini(value, QSettings::IniFormat);
             url = QUrl(ini.value("Network/firstUrl", QApplication::applicationDirPath()).toString());
         } else if (strncmp("--validate-ca", s, nlen) == 0) {
+//WK1
             if (QString(value) == "off") {
                 QWebPage& page = dynamic_cast<QWebPage&> ( webview.page() );
                 QObject::connect(page.networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)), new SSLSlotHandler(), SLOT(sslError(QNetworkReply*, const QList<QSslError> &)));
             }
+        } else if (strncmp("--persistent-storage", s, nlen) == 0) {
+          QString path(value);
+          webview.settings().setStorage(WebSettings::Persistent, path); // Ineffective for WK2
+        } else if (strncmp("--cookie-storage", s, nlen) == 0) {
+          QString path(value);
+          webview.settings().setStorage(WebSettings::Cookie, path); // Ineffective for WK2
         }
     }
 
@@ -246,5 +265,5 @@ int main(int argc, char *argv[]) {
 
     return a.exec();
 
-    webview.destroy();
+    delete &webview;
 }

@@ -2,6 +2,7 @@
 #define __WEBVIEW__
 
 #include "webpage.h"
+#include "websettings.h"
 
 //WK1
 #include "graphicsview.h"
@@ -17,64 +18,71 @@
 #include <QQmlComponent>
 #endif
 
+class WebSettings;
 class WebView
 {
 public:
     enum ViewportUpdateMode {FullViewport = 0};
 
-    static WebView& instance(void);
     virtual ~WebView();
 
-    virtual bool initialize(void);
-    virtual void destroy(void) = 0;
+    virtual bool initialize(void) = 0;
 
-    WebPage& page(void);
+    virtual WebPage& page(void) = 0 ;
+
+    virtual WebSettings& settings(void) = 0;
 
     virtual void load(const QUrl& url) = 0;
 
-    virtual void resize(const QSize &) = 0;
+    virtual void resize(const QSize& size) = 0;
 
     virtual void show(void) = 0;
     virtual void hide(void) = 0;
+    virtual void setVisible(bool enable = true) = 0;
 
-    virtual void setFocus(void) = 0;
+    virtual void setFocus(bool enable = true) = 0;
 
-    virtual void setViewportUpdateMode(WebView::ViewportUpdateMode) = 0;
+    virtual void setViewportUpdateMode(WebView::ViewportUpdateMode mode = WebView::FullViewport) = 0;
+    virtual void setTransparentBackground(bool enable = true) = 0;
 
 protected:
     WebView();
     WebView(const WebView&);
     WebView& operator=(const WebView&);
-
-    static WebView* webview;
-
-private:
-    QSize _size_;
-    WebPage _page_;
 };
 
+class WK1WebSettings;
 class WK1WebView : public WebView
 {
+friend class WK1WebSettings;
+
+private:
+    WK1WebSettings _settings_;
+
 public:
-    static WK1WebView& instance(void);
+    WK1WebView();
     virtual ~WK1WebView();
 
     bool initialize(void);
-    void destroy(void);
 
-    void resize(const QSize &);
+    WebPage& page(void);
+
+    WebSettings& settings(void);
 
     void load(const QUrl& url);
 
+    void resize(const QSize& size);
+
     void show(void);
     void hide(void);
+    void setVisible(bool enable);
 
-    void setFocus(void);
+    void setFocus(bool enable);
 
     void setViewportUpdateMode(WebView::ViewportUpdateMode mode);
+    void setTransparentBackground(bool enable);
 
 private:
-    WK1WebView();
     WK1WebView(const WK1WebView&);
     WK1WebView& operator=(const WK1WebView&);
 
@@ -84,39 +92,53 @@ private:
 #ifdef QT_BUILD_WITH_OPENGL
     QGLWidget g_viewport;
 #endif
+
+    WebPage _page_;
 };
 
 #ifdef QT_BUILD_WITH_QML_API
+class WK2WebSettings;
 class WK2WebView : public WebView
 {
+friend class WK2WebSettings;
+
+private:
+    WK2WebSettings _settings_;
+
 public:
-    static WK2WebView& instance(void);
+    WK2WebView();
     virtual ~WK2WebView();
 
     bool initialize(void);
-    void destroy(void);
 
-    void resize(const QSize &);
+    WebPage& page(void);
+
+    WebSettings& settings(void);
 
     void load(const QUrl& url);
 
+    void resize(const QSize &);
+
     void show(void);
     void hide(void);
+    void setVisible(bool enable);
 
-    void setFocus(void);
+    void setFocus(bool enable);
 
     void setViewportUpdateMode(WebView::ViewportUpdateMode mode);
+    void setTransparentBackground(bool enable);
 
 private:
-    WK2WebView();
     WK2WebView(const WK2WebView&);
     WK2WebView& operator=(const WK2WebView&);
 
     QQmlEngine q_engine;
     QQmlComponent q_component;
 
-    QObject* q_webview; //QQuickWebView
-    QQuickView q_view;  //A view, i.e. scenegraph, to display the contents
+    QObject* q_webview; // QQuickWebView
+    QQuickView q_view;  // A view, i.e. scenegraph, to display the contents
+
+    WebPage _page_;
 };
 #endif
 #endif // __WEBVIEW__

@@ -6,13 +6,15 @@ HEADERS     += \
                webpage.h \
                graphicswebview.h \
                graphicsview.h \
-               webview.h
+               webview.h \
+               websettings.h
 SOURCES     += \
                sslhandler.cpp \
                webpage.cpp \
                graphicswebview.cpp \
                graphicsview.cpp \
                webview.cpp \
+               websettings.cpp \
                qtbrowser.cpp
 
 contains(QT_CONFIG, opengl) {
