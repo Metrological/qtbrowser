@@ -62,6 +62,11 @@ contains(QT_MAJOR_VERSION, 5) {
    QT += \
          webkitwidgets
 
+   contains(QT_CONFIG, opengl){
+      QT += \ 
+            opengl
+   }
+
    qtHaveModule(quick):qtHaveModule(qml) {
       message("Modules qml and quick found.")
  
