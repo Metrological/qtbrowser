@@ -14,9 +14,19 @@
 "\n"                    \
 "import QtQuick 2.0\n"  \
 "import QtWebKit 3.0\n" \
+"import QtWebKit.experimental 1.0\n" \
 "\n"                    \
 "WebView {\n"           \
 "    id : webView\n"    \
+"    experimental.alertDialog: Item {\n" \
+"            Timer {\n" \
+"                interval: 1\n" \
+"                running: true\n" \
+"                onTriggered: {\n" \
+"                  console.log(\"JS Alert: \" + model.message);\n" \
+"                }\n" \
+"            }\n" \
+"    }\n" \
 "}"
 #endif
 
