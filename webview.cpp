@@ -80,6 +80,9 @@ bool WK1WebView::initialize(void)
 {
     g_webview.setUrl(QUrl(""));
 
+    QWebPage* webPage = static_cast<QWebPage*>(&page());
+    g_webview.setPage(webPage);
+
     g_scene.setItemIndexMethod(QGraphicsScene::NoIndex);
     g_scene.addItem(&g_webview);
 
