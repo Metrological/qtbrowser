@@ -150,6 +150,11 @@ WK2WebView::WK2WebView() : q_component(&q_engine), q_webview(NULL), q_view(&q_en
 {
     //Creation from a local file should be instant. Therefore we keep it simple.
     q_component.setData(QByteArray(QML_DATA), QUrl(QML_URL));
+    if (q_component.isError()) {
+        QList<QQmlError> errors = q_component.errors();
+        for (int i = 0; i < errors.size(); ++i)
+            qDebug() << errors.at(i).toString();
+    }
     Q_ASSERT(QQmlComponent::Ready == q_component.status());
 
     q_webview = q_component.create();
