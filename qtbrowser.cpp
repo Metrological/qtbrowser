@@ -126,28 +126,12 @@ int main(int argc, char *argv[]) {
 
     QUrl url;
 
-#ifdef QT_BUILD_WITH_QML_API
-    // First argument should be WebKit mode otherwise fallback to default 
-    int mode = 1; 
-    if (1 < argc)
-    { 
-       size_t nlen;
-
-       const char* s = argv[1];
-       const char* value;
-
-       value = strchr(s, '=');
-       nlen = value++ - s;
-
-        if (strncmp("--webkit", s, nlen) == 0)
-            if (strncmp("2", value, 1) == 0)
-                mode = 2;
-    }
-
-    WebView& webview = (mode==2) ? dynamic_cast<WebView&>(WK2WebView::instance()) : dynamic_cast<WebView&>(WK1WebView::instance());
-#else
-    WebView& webview = dynamic_cast<WebView&>(WK1WebView::instance());
-#endif
+    int mode = 1;
+    bool fullscreen = false;
+    QString userAgent;
+    QUrl proxyUrl;
+    bool validateCa = true;
+    unsigned int inspectorPort = 0;
 
     for (int ax = 1; ax < argc; ++ax) {
         size_t nlen;
@@ -177,7 +161,7 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
         } else if (strcmp("--full-viewport-update", s) == 0) {
-            webview.setViewportUpdateMode(WebView::FullViewport);
+            fullscreen = true;
         }
 
         value = strchr(s, '=');
@@ -191,7 +175,7 @@ int main(int argc, char *argv[]) {
         } else if (strncmp("--app-version", s, nlen) == 0) {
             a.setApplicationVersion(value);
         } else if (strncmp("--user-agent", s, nlen) == 0) {
-            webview.setUserAgent(value);
+            userAgent = value;
         } else if (strncmp("--missing-image", s, nlen) == 0) {
             if (strcmp(value, "no") == 0)
                 settings->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap());
@@ -208,8 +192,7 @@ int main(int argc, char *argv[]) {
         } else if (strncmp("--websecurity", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
         } else if (strncmp("--inspector", s, nlen) == 0) {
-            QWebPage& page = dynamic_cast<QWebPage&> ( webview.page() );
-            page.setProperty("_q_webInspectorServerPort", (unsigned int)atoi(value));
+            inspectorPort = (unsigned int)atoi(value);
         } else if (strncmp("--max-cached-pages", s, nlen) == 0) {
             settings->setMaximumPagesInCache((unsigned int)atoi(value));
         } else if (strncmp("--pixmap-cache", s, nlen) == 0) {
@@ -219,21 +202,48 @@ int main(int argc, char *argv[]) {
             if (l.length() == 3)
                 settings->setObjectCacheCapacities(l.at(0).toInt()*1024*1024, l.at(1).toInt()*1024*1024, l.at(2).toInt()*1024*1024);
         } else if (strncmp("--http-proxy", s, nlen) == 0) {
-            QUrl p = QUrl::fromEncoded(value);
-            QWebPage& page = dynamic_cast<QWebPage&> ( webview.page() );
-            QNetworkAccessManager* manager = page.networkAccessManager();
-            QNetworkProxy proxy = QNetworkProxy(QNetworkProxy::HttpProxy, p.host(), p.port(80), p.userName(), p.password());
-            manager->setProxy(proxy);
+            proxyUrl = QUrl::fromEncoded(value);
         } else if (strncmp("--ini", s, nlen) == 0) {
             QSettings ini(value, QSettings::IniFormat);
             url = QUrl(ini.value("Network/firstUrl", QApplication::applicationDirPath()).toString());
         } else if (strncmp("--validate-ca", s, nlen) == 0) {
-            if (QString(value) == "off") {
-                QWebPage& page = dynamic_cast<QWebPage&> ( webview.page() );
-                QObject::connect(page.networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)), new SSLSlotHandler(), SLOT(sslError(QNetworkReply*, const QList<QSslError> &)));
+            if (QString(value) == "off")
+                validateCa = false;
+        } else if (strncmp("--webkit", s, nlen) == 0) {
+            mode = QString(value) == "2" ? 2 : 1;
+#ifndef QT_BUILD_WITH_QML_API
+            if (mode == 2) {
+                printf("WebKit2 not supported in this build.\n");
+                return;
             }
+#endif
         }
     }
+
+#ifdef QT_BUILD_WITH_QML_API
+    WebView& webview = (mode==2) ? dynamic_cast<WebView&>(WK2WebView::instance()) : dynamic_cast<WebView&>(WK1WebView::instance());
+#else
+    WebView& webview = dynamic_cast<WebView&>(WK1WebView::instance());
+#endif
+
+    if (fullscreen)
+        webview.setViewportUpdateMode(WebView::FullViewport);
+
+    if (!userAgent.isEmpty())
+        webview.setUserAgent(userAgent);
+
+    QWebPage& page = dynamic_cast<QWebPage&>(webview.page());
+    if (inspectorPort)
+        page.setProperty("_q_webInspectorServerPort", inspectorPort);
+
+    if (!proxyUrl.isEmpty()) {
+        QNetworkAccessManager* manager = page.networkAccessManager();
+        QNetworkProxy proxy = QNetworkProxy(QNetworkProxy::HttpProxy, proxyUrl.host(), proxyUrl.port(80), proxyUrl.userName(), proxyUrl.password());
+        manager->setProxy(proxy);
+     }
+
+    if (!validateCa)
+        QObject::connect(page.networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)), new SSLSlotHandler(), SLOT(sslError(QNetworkReply*, const QList<QSslError> &)));
 
     webview.initialize();
 

@@ -28,7 +28,7 @@ public:
     virtual bool initialize(void);
     virtual void destroy(void) = 0;
 
-    void setUserAgent(const char*);
+    void setUserAgent(const QString&);
     QString userAgent() const { return m_userAgent; }
 
     WebPage& page(void);

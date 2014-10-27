@@ -62,7 +62,7 @@ WebPage& WebView::page(void)
     return _page_;
 }
 
-void WebView::setUserAgent(const char* value)
+void WebView::setUserAgent(const QString& value)
 {
     m_userAgent = value;
 }
