@@ -18,6 +18,7 @@
 "\n"                    \
 "WebView {\n"           \
 "    id : webView\n"    \
+"    experimental.preferences.webAudioEnabled: true\n" \
 "    experimental.alertDialog: Item {\n" \
 "            Timer {\n" \
 "                interval: 1\n" \
