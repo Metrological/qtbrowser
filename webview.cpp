@@ -62,6 +62,11 @@ WebPage& WebView::page(void)
     return _page_;
 }
 
+void WebView::setUserAgent(const char* value)
+{
+    m_userAgent = value;
+}
+
 WK1WebView::WK1WebView() : g_scene(&g_view)
 {
 }
@@ -140,6 +145,9 @@ void WK1WebView::resize(const QSize& _size_)
 
 void WK1WebView::load(const QUrl& _url_)
 {
+    WebPage& webPage = page();
+    if (!userAgent().isEmpty())
+        webPage.setUserAgentForUrl(_url_, userAgent());
     g_webview.load(_url_);
 }
 
@@ -248,6 +256,10 @@ void WK2WebView::load(const QUrl& _url_)
     QQmlProperty property(q_webview, "url");
     if(property.isValid())
         property.write(_url_);
+
+    QQmlProperty userAgentProperty(q_webview, "experimental.userAgent");
+    if(userAgentProperty.isValid() && !userAgent().isEmpty())
+        userAgentProperty.write(userAgent());
 }
 
 void WK2WebView::show()
@@ -274,4 +286,5 @@ void WK2WebView::setFocus()
     if(property.isValid())
         property.write(true);
 }
+
 #endif

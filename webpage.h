@@ -9,6 +9,7 @@
 class WebPage : public QWebPage
 {
 public:
+    WebPage();
     void setUserAgentForUrl(const QUrl& url, QString agent);
 
 protected:
@@ -19,7 +20,7 @@ protected:
 
 private:
     QUrl url;
-    QString agent;
+    QHash<QString, QString> userAgents;
 };
 
 #endif // __WEBPAGE__

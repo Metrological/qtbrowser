@@ -191,10 +191,7 @@ int main(int argc, char *argv[]) {
         } else if (strncmp("--app-version", s, nlen) == 0) {
             a.setApplicationVersion(value);
         } else if (strncmp("--user-agent", s, nlen) == 0) {
-            WebPage& page = webview.page();
-//TODO: order of arguments might be important
-            if(!url.isEmpty())
-                page.setUserAgentForUrl(url, value);
+            webview.setUserAgent(value);
         } else if (strncmp("--missing-image", s, nlen) == 0) {
             if (strcmp(value, "no") == 0)
                 settings->setWebGraphic(QWebSettings::MissingImageGraphic, QPixmap());

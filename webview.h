@@ -28,6 +28,9 @@ public:
     virtual bool initialize(void);
     virtual void destroy(void) = 0;
 
+    void setUserAgent(const char*);
+    QString userAgent() const { return m_userAgent; }
+
     WebPage& page(void);
 
     virtual void load(const QUrl& url) = 0;
@@ -51,6 +54,7 @@ protected:
 private:
     QSize _size_;
     WebPage _page_;
+    mutable QString m_userAgent;
 };
 
 class WK1WebView : public WebView
