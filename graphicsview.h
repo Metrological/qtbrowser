@@ -1,5 +1,5 @@
 #ifndef __GRAPHICSVIEW__
-#define GRAPHICSVIEW__
+#define __GRAPHICSVIEW__
 
 #include <QGraphicsView>
 #include <QWidget>
