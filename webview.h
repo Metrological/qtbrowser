@@ -46,12 +46,13 @@ public:
 
 protected:
     WebView();
-    WebView(const WebView&);
-    WebView& operator=(const WebView&);
-
     static WebView* webview;
 
 private:
+    // Disallow copy and assign.
+    WebView(const WebView&);
+    WebView& operator=(const WebView&);
+
     QSize _size_;
     WebPage _page_;
     mutable QString m_userAgent;

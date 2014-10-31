@@ -214,7 +214,7 @@ int main(int argc, char *argv[]) {
 #ifndef QT_BUILD_WITH_QML_API
             if (mode == 2) {
                 printf("WebKit2 not supported in this build.\n");
-                return;
+                return 0;
             }
 #endif
         }

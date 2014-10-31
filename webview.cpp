@@ -36,12 +36,6 @@ WebView* WebView::webview=NULL;
 WebView::WebView()
 {}
 
-WebView::WebView(const WebView&)
-{}
-
-WebView& WebView::operator=(const WebView&)
-{}
-
 WebView& WebView::instance(void)
 {
     return *webview;
