@@ -229,12 +229,15 @@ int main(int argc, char *argv[]) {
     if (fullscreen)
         webview.setViewportUpdateMode(WebView::FullViewport);
 
-    if (!userAgent.isEmpty())
-        webview.setUserAgent(userAgent);
-
     QWebPage& page = dynamic_cast<QWebPage&>(webview.page());
     if (inspectorPort)
         page.setProperty("_q_webInspectorServerPort", inspectorPort);
+
+    if (!userAgent.isEmpty())
+    {
+        webview.setUserAgent(userAgent);
+	page.defaultUserAgent(userAgent);
+    }
 
     if (!proxyUrl.isEmpty()) {
         QNetworkAccessManager* manager = page.networkAccessManager();
