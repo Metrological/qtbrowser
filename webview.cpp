@@ -142,7 +142,7 @@ void WK1WebView::load(const QUrl& _url_)
 {
     WebPage& webPage = page();
     if (!userAgent().isEmpty())
-        webPage.setUserAgentForUrl(_url_, userAgent());
+        webPage.setDefaultUserAgent(userAgent());
     g_webview.load(_url_);
 }
 

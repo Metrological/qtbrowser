@@ -30,10 +30,13 @@ bool WebPage::shouldInterruptJavaScript()
 
 QString WebPage::userAgentForUrl(const QUrl& _url_) const
 {
+    if (!defaultUserAgent.isEmpty())
+        return defaultUserAgent;
+
     return userAgents.value(_url_.url(), QWebPage::userAgentForUrl(_url_));
 }
 
-void WebPage::setUserAgentForUrl(const QUrl& _url_, QString _agent_)
+void WebPage::setDefaultUserAgent(QString _agent_)
 {
-    userAgents[_url_.url()] = _agent_;
+    defaultUserAgent = _agent_;
 }

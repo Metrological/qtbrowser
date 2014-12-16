@@ -10,7 +10,7 @@ class WebPage : public QWebPage
 {
 public:
     WebPage();
-    void setUserAgentForUrl(const QUrl& url, QString agent);
+    void setDefaultUserAgent(QString agent);
 
 protected:
     void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& source);
@@ -19,7 +19,7 @@ protected:
     QString userAgentForUrl(const QUrl& url) const;
 
 private:
-    QUrl url;
+    QString defaultUserAgent;
     QHash<QString, QString> userAgents;
 };
 
