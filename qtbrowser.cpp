@@ -86,7 +86,7 @@ void webSettingAttribute(QWebSettings::WebAttribute option, const QString& value
 }
 
 int main(int argc, char *argv[]) {
-    QApplication a(argc, argv);
+    QApplication application(argc, argv);
 
     QSize size = QApplication::desktop()->screenGeometry().size();
 
@@ -153,7 +153,7 @@ int main(int argc, char *argv[]) {
             palette.setColor(QPalette::Active, QPalette::Base, Qt::transparent);
             palette.setColor(QPalette::Inactive, QPalette::Window, Qt::transparent);
             palette.setColor(QPalette::Inactive, QPalette::Base, Qt::transparent);
-            a.setPalette(palette);
+            application.setPalette(palette);
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 #ifdef QT_BUILD_WITH_OPENGL
         } else if (strcmp("--tiled-backing-store", s) == 0) {
@@ -171,9 +171,9 @@ int main(int argc, char *argv[]) {
         if (strncmp("--url", s, nlen) == 0) {
             url = QUrl(value);
         } else if (strncmp("--app-name", s, nlen) == 0) {
-            a.setApplicationName(value);
+            application.setApplicationName(value);
         } else if (strncmp("--app-version", s, nlen) == 0) {
-            a.setApplicationVersion(value);
+            application.setApplicationVersion(value);
         } else if (strncmp("--user-agent", s, nlen) == 0) {
             userAgent = value;
         } else if (strncmp("--missing-image", s, nlen) == 0) {
@@ -220,21 +220,17 @@ int main(int argc, char *argv[]) {
         }
     }
 
-#ifdef QT_BUILD_WITH_QML_API
-    WebView& webview = (mode==2) ? dynamic_cast<WebView&>(WK2WebView::instance()) : dynamic_cast<WebView&>(WK1WebView::instance());
-#else
-    WebView& webview = dynamic_cast<WebView&>(WK1WebView::instance());
-#endif
+    IWebView* webview = IWebView::instance (mode == 1 ? WEBKIT_1 : WEBKIT_2);
 
     if (fullscreen)
-        webview.setViewportUpdateMode(WebView::FullViewport);
+        webview->setViewportUpdateMode(FullViewport);
 
-    if (!userAgent.isEmpty())
-        webview.setUserAgent(userAgent);
-
-    QWebPage& page = dynamic_cast<QWebPage&>(webview.page());
+    WebPage& page = webview->page();
     if (inspectorPort)
         page.setProperty("_q_webInspectorServerPort", inspectorPort);
+
+    if (!userAgent.isEmpty())
+	page.setDefaultUserAgent(userAgent);
 
     if (!proxyUrl.isEmpty()) {
         QNetworkAccessManager* manager = page.networkAccessManager();
@@ -245,14 +241,16 @@ int main(int argc, char *argv[]) {
     if (!validateCa)
         QObject::connect(page.networkAccessManager(), SIGNAL(sslErrors(QNetworkReply*, const QList<QSslError> &)), new SSLSlotHandler(), SLOT(sslError(QNetworkReply*, const QList<QSslError> &)));
 
-    webview.initialize();
+    webview->initialize();
 
-    webview.load(url.isEmpty() ? QUrl("http://www.google.com") : url);
-    webview.resize(size);
-    webview.setFocus();
-    webview.show();
+    webview->load(url.isEmpty() ? QUrl("http://www.google.com") : url);
+    webview->resize(size);
+    webview->setFocus();
+    webview->show();
 
-    return a.exec();
+    int result = application.exec();
 
-    webview.destroy();
+    webview->destroy();
+
+    return (result);
 }
