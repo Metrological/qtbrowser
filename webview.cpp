@@ -171,7 +171,7 @@ namespace WebKit2 {
 // ----------------------------------------------------------------------------------------------------------------------------------
 
 #ifdef QT_BUILD_WITH_QML_API
-class WebView : public WebView
+class WebView : public IWebView
 {
 public:
     WebView() :
@@ -202,9 +202,6 @@ public:
     {
         m_view.setResizeMode(QQuickView::SizeViewToRootObject);
 
-        Q_ASSERT(NULL != m_webview);
-        QQuickItem* m_item = static_cast<QQuickItem*>(m_webview);
-
         //Add the qml item to the view
         m_view.setContent(QUrl(QML_URL), &m_component, static_cast<QQuickItem*>(m_webview));
 
@@ -215,7 +212,7 @@ public:
     {
     }
 
-    void resize(const QSize &)
+    void resize(const QSize& size)
     {
         Q_ASSERT(NULL != m_webview);
 
@@ -229,11 +226,11 @@ public:
 
         QQmlProperty width(m_webview, "width");
         if(width.isValid())
-            width.write(_size_.width());
+            width.write(size.width());
 
         QQmlProperty height(m_webview, "height");
         if(height.isValid())
-            height.write(_size_.height());
+            height.write(size.height());
     }
 
     void load(const QUrl& url)
@@ -242,7 +239,7 @@ public:
 
         QQmlProperty property(m_webview, "url");
         if(property.isValid())
-            property.write(_url_);
+            property.write(url);
     }
 
     void show(void)
