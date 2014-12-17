@@ -4,10 +4,8 @@
 
 WebPage::WebPage()
 {
-    userAgents["http://youtube.com/tv/"] = "QtBrowser/1.0 (Linux armv6 ; U; en), RaspberryPi/1.0 (RaspberryPi, B, Wired)";
-    userAgents["http://qual-e.appspot.com/"] = "QtBrowser/1.0 (Linux armv6 ; U; en), RaspberryPi/1.0 (RaspberryPi, B, Wired)";
-
 }
+
 void WebPage::javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& source)
 {
     if (source.isEmpty()) {
