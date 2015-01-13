@@ -114,6 +114,7 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::PluginsEnabled, false);
     settings->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
     settings->setAttribute(QWebSettings::WebSecurityEnabled, false);
+    settings->setAttribute(QWebSettings::LocalContentCanAccessRemoteUrls, true);
     settings->setAttribute(QWebSettings::LocalStorageEnabled, true);
     settings->enablePersistentStorage(path);
     settings->setAttribute(QWebSettings::OfflineWebApplicationCacheEnabled, true);
