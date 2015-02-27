@@ -73,6 +73,7 @@ void help(void) {
 #endif
 #endif
     "  --validate-ca=<on|off>         Validate Root CA certificates (default: on)   \n"
+    "  --cookie-storage=<path>        Set cookie storage path                       \n"
     " ------------------------------------------------------------------------------\n"
     " http://www.metrological.com - (c) 2014 Metrological - support@metrological.com\n"
     "");
@@ -218,6 +219,9 @@ int main(int argc, char *argv[]) {
                 return 0;
             }
 #endif
+        } else if (strncmp("--cookie-storage", s, nlen) == 0) {
+          QString path(value);
+          settings->enablePersistentCookieStorage(path);
         }
     }
 
