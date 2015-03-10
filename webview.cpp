@@ -3,6 +3,7 @@
 //WK1
 #include "graphicsview.h"
 #include "graphicswebview.h"
+#include "pluginfactory.h"
 #ifdef QT_BUILD_WITH_OPENGL
 #include <QtOpenGL/QGLWidget>
 #endif
@@ -94,6 +95,8 @@ public:
         Q_ASSERT(NULL != app);
         app->installEventFilter(&m_view);
 #endif
+
+        m_webpage.setPluginFactory(new PluginFactory());
 
         return true;
     }

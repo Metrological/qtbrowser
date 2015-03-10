@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
 #endif
 #endif
     settings->setAttribute(QWebSettings::WebAudioEnabled, true);
-    settings->setAttribute(QWebSettings::PluginsEnabled, false);
+    settings->setAttribute(QWebSettings::PluginsEnabled, true);
     settings->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
     settings->setAttribute(QWebSettings::WebSecurityEnabled, false);
     settings->setAttribute(QWebSettings::LocalContentCanAccessRemoteUrls, true);
