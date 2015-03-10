@@ -41,12 +41,14 @@
 #include "webview.h"
 #include "sslhandler.h"
 
+
 void help(void) {
   printf("%s",
     " ------------------------------------------------------------------------------\n"
     " Usage: qtbrowser --url=http://www.example.org/                                \n"
     " ------------------------------------------------------------------------------\n"
     "  --help                         Print this help page and exit                 \n"
+    "  --version                      Print the version information of qtbrowser    \n"
 #ifdef QT_BUILD_WITH_QML_API
     "  --webkit=<version>             WebKit mode (1=WK1 (default), 2=WK2)          \n"
 #endif
@@ -79,6 +81,13 @@ void help(void) {
     "");
 }
 
+void print_version() {
+  // The BROWSERVERSION information comes from the makefile/git tagging policy
+  //  This still needs to be figured out, so for now it is hard-coded
+#define BROWSERVERSION  "2.0.6"  
+  printf("Browser version: %s\n\n", BROWSERVERSION);
+}
+
 void webSettingAttribute(QWebSettings::WebAttribute option, const QString& value) {
     if (value == "on")
         QWebSettings::globalSettings()->setAttribute(option, true);
@@ -87,6 +96,8 @@ void webSettingAttribute(QWebSettings::WebAttribute option, const QString& value
 }
 
 int main(int argc, char *argv[]) {
+    print_version();
+
     QApplication application(argc, argv);
 
     QSize size = QApplication::desktop()->screenGeometry().size();
@@ -144,6 +155,8 @@ int main(int argc, char *argv[]) {
         // boolean options
         if (strcmp("--help", s) == 0) {
             help();
+            return 0;
+        } else if (strcmp("--version", s) == 0) {
             return 0;
         } else if (strcmp("--transparent", s) == 0) {
             QPalette palette;
@@ -220,8 +233,10 @@ int main(int argc, char *argv[]) {
             }
 #endif
         } else if (strncmp("--cookie-storage", s, nlen) == 0) {
-          QString path(value);
-          settings->enablePersistentCookieStorage(path);
+          QString cookiePath(value);
+          // Create persistent cookie-jar, path to the cookie jar is set to the
+          //   default data path unless it was overruled via command-line option
+          settings->enablePersistentCookieStorage(cookiePath);
         }
     }
 
@@ -235,7 +250,7 @@ int main(int argc, char *argv[]) {
         page.setProperty("_q_webInspectorServerPort", inspectorPort);
 
     if (!userAgent.isEmpty())
-	page.setDefaultUserAgent(userAgent);
+       page.setDefaultUserAgent(userAgent);
 
     if (!proxyUrl.isEmpty()) {
         QNetworkAccessManager* manager = page.networkAccessManager();
