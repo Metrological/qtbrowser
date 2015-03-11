@@ -152,12 +152,12 @@ void GLPlugin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glDisableVertexAttribArray(program->vertexAttr());
 
-    QImage img(geometry().toAlignedRect().width(), geometry().toAlignedRect().height(), QImage::Format_RGBA8888_Premultiplied);
-    glReadPixels(0,0,geometry().toAlignedRect().width(), geometry().toAlignedRect().height(),GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
+    QImage img(size, QImage::Format_RGBA8888_Premultiplied);
+    glReadPixels(0,0,size.width(), size.height(),GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
 
     prevContext->makeCurrent(prevContext->surface());
 
-    painter->drawImage(geometry(), img.mirrored());
+    painter->drawImage(QPoint(0,0), img.mirrored());
 
     glDeleteFramebuffers(1, &fbo);
     glDeleteTextures(1, &tex);
