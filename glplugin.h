@@ -15,6 +15,11 @@ public:
     ~GLPlugin();
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
 
+protected:
+    virtual void keyPressEvent(QKeyEvent* event);
+    virtual void keyReleaseEvent(QKeyEvent* event);
+    virtual QVariant itemChange(GraphicsItemChange change, const QVariant& value);
+
 private:
     QOpenGLContext* m_context;
     QOffscreenSurface* m_surface;

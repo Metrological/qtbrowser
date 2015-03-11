@@ -100,6 +100,8 @@ GLPlugin::GLPlugin()
     , m_context(0)
     , m_surface(0)
 {
+    // needed in order to get keyboard events
+    setFlag(QGraphicsItem::ItemIsFocusable, true);
 }
 
 GLPlugin::~GLPlugin()
@@ -110,6 +112,8 @@ GLPlugin::~GLPlugin()
 
 void GLPlugin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
+    // we don't really need our custon gl context, but it's safer
+    // to use a new one to avoid messing with the rendering of the page content
     QOpenGLContext *prevContext = QOpenGLContext::currentContext();
     if (!m_context) {
         m_surface = new QOffscreenSurface();
@@ -152,6 +156,7 @@ void GLPlugin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glDisableVertexAttribArray(program->vertexAttr());
 
+    // FIXME: avoid this CPU->GPU copy
     QImage img(size, QImage::Format_RGBA8888_Premultiplied);
     glReadPixels(0,0,size.width(), size.height(),GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
 
@@ -161,4 +166,25 @@ void GLPlugin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
 
     glDeleteFramebuffers(1, &fbo);
     glDeleteTextures(1, &tex);
+}
+
+void GLPlugin::keyPressEvent(QKeyEvent* event)
+{
+    printf("press event\n");
+}
+
+void GLPlugin::keyReleaseEvent(QKeyEvent* event)
+{
+    printf("release event\n");
+}
+
+QVariant GLPlugin::itemChange(GraphicsItemChange change, const QVariant& value)
+{
+    // when the widget gets visible and inside a scene it grabs the keyboard to get keyboard events
+    // the grab will be released automatically when the widget gets hidden or out of the scene
+    if (change == QGraphicsItem::ItemVisibleHasChanged || change == QGraphicsItem::ItemSceneHasChanged) {
+        if (isVisible() && scene())
+            grabKeyboard();
+    }
+   return QGraphicsItem::itemChange(change, value);
 }
