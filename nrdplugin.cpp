@@ -1,11 +1,36 @@
 #include "glplugin.h"
+
 #include <QPainter>
 #include <stdio.h>
 #include <QGraphicsScene>
 #include <QImage>
 #include <gibbon/external/MetrologicalEGL.h>
+#include <nrdbase/config.h>
+#include <gibbon/config.h>
+#include <nrdbase/Configuration.h>
+#include <nrdbase/Thread.h>
 
-class NRDProgram {
+#include <GibbonConfiguration.h>
+#include <GibbonApplication.h>
+#include <Transform.h>
+
+#include <nrdapp/AppLog.h>
+#include <nrdapp/Version.h>
+#include <nrdapp/AppThread.h>
+
+#include <stdio.h>
+#include <errno.h>
+
+// using namespace std;
+using namespace netflix;
+// using namespace netflix::base;
+using namespace netflix::application;
+using namespace netflix::application::gibbon;
+
+#include <stdlib.h>
+
+class NRDProgram: public netflix::base::Thread
+{
 public:
     static NRDProgram* instance() {
         if (!m_instance) {
@@ -15,8 +40,35 @@ public:
     }
 
 private:
-    NRDProgram()
+    NRDProgram () : netflix::base::Thread(&THREAD_GIBBON_MAIN)
     {
+    }
+
+    virtual ~NRDProgram()
+    {
+    }
+
+    virtual void Run()
+    {
+      netflix::base::Thread::Adopt(&THREAD_GIBBON_MAIN);
+
+      netflix::application::gibbon::GibbonApplication::setArgs(argc, argv);
+
+      if (netflix::application::gibbon::GibbonConfiguration::init(argc, argv)) {
+      {
+        gibbon_oem_event(GibbonOEM_Init);
+
+        int ret;
+        {
+          netflix::application::gibbon::GibbonApplication app;
+
+          ret = app.exec() ? 0 : 1;
+
+          gibbon_oem_event(GibbonOEM_Cleanup);
+        }
+      }
+
+      netflix::base::Thread::Disown();
     }
 
     static NRDProgram *m_instance;
