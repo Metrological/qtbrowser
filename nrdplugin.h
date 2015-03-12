@@ -1,5 +1,5 @@
-#ifndef __GLPLUGIN__
-#define __GLPLUGIN__
+#ifndef __NRDPLUGIN__
+#define __NRDPLUGIN__
 
 #include <QGraphicsWidget>
 #include <QOpenGLContext>
@@ -14,6 +14,8 @@ public:
     NRDPlugin();
     ~NRDPlugin();
 
+    virtual void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget);
+
 protected:
     virtual void keyPressEvent(QKeyEvent* event);
     virtual void keyReleaseEvent(QKeyEvent* event);
@@ -24,4 +26,4 @@ private:
     QOffscreenSurface* m_surface;
 };
 
-#endif // __PLUGIN__
+#endif // __NRDPLUGIN__

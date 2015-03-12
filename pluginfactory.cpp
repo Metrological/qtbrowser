@@ -1,5 +1,5 @@
 #include "pluginfactory.h"
-#include "NRDplugin.h"
+#include "nrdplugin.h"
 #include <stdio.h>
 
 PluginFactory::PluginFactory(QObject* parent)
@@ -25,7 +25,7 @@ QList<QWebPluginFactory::Plugin> PluginFactory::plugins() const
 QObject* PluginFactory::create(const QString & mimeType, const QUrl & url, const QStringList & argumentNames, const QStringList & argumentValues) const
 {
     if (mimeType == "application/x-qt-plugin") {
-        GLPlugin *plugin = new NRDPlugin();
+        NRDPlugin *plugin = new NRDPlugin();
         return plugin;
     }
 

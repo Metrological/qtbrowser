@@ -1,22 +1,22 @@
-#include "glplugin.h"
+#include "nrdplugin.h"
 
 #include <QPainter>
 #include <stdio.h>
 #include <QGraphicsScene>
 #include <QImage>
-#include <gibbon/external/MetrologicalEGL.h>
-#include <nrdbase/config.h>
-#include <gibbon/config.h>
-#include <nrdbase/Configuration.h>
+#include <external/MetrologicalEGL.h>
+//#include <nrdbase/config.h>
+//#include <nrdbase/Configuration.h>
 #include <nrdbase/Thread.h>
+// #include <config.h>
 
-#include <GibbonConfiguration.h>
-#include <GibbonApplication.h>
-#include <Transform.h>
+#include <nrdapp/GibbonConfiguration.h>
+#include <nrdapp/GibbonApplication.h>
+//#include <nrdapp/Transform.h>
 
-#include <nrdapp/AppLog.h>
-#include <nrdapp/Version.h>
-#include <nrdapp/AppThread.h>
+//#include <nrdapp/AppLog.h>
+//#include <nrdapp/Version.h>
+//#include <nrdapp/AppThread.h>
 
 #include <stdio.h>
 #include <errno.h>
@@ -28,6 +28,10 @@ using namespace netflix::application;
 using namespace netflix::application::gibbon;
 
 #include <stdlib.h>
+
+DEFINE_THREAD(GIBBON_MAIN, 70, 5*1024*1024);
+
+static char* arguments[] = { "-I", "netflix.id" };
 
 class NRDProgram: public netflix::base::Thread
 {
@@ -52,17 +56,16 @@ private:
     {
       netflix::base::Thread::Adopt(&THREAD_GIBBON_MAIN);
 
-      netflix::application::gibbon::GibbonApplication::setArgs(argc, argv);
+      netflix::application::gibbon::GibbonApplication::setArgs(2, arguments);
 
-      if (netflix::application::gibbon::GibbonConfiguration::init(argc, argv)) {
+      if (netflix::application::gibbon::GibbonConfiguration::init(2, arguments))
       {
         gibbon_oem_event(GibbonOEM_Init);
 
-        int ret;
         {
           netflix::application::gibbon::GibbonApplication app;
 
-          ret = app.exec() ? 0 : 1;
+          app.exec();
 
           gibbon_oem_event(GibbonOEM_Cleanup);
         }
@@ -75,7 +78,7 @@ private:
 };
 NRDProgram* NRDProgram::m_instance = NULL;
 
-NRDPlugin::NRDPlugin(
+NRDPlugin::NRDPlugin()
     : QGraphicsWidget(0)
     , m_context(0)
     , m_surface(0)
@@ -90,7 +93,7 @@ NRDPlugin::~NRDPlugin()
     delete m_surface;
 }
 
-/* virtual */ void NRDPlugin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
+/* virtual */ void NRDPlugin::paint(QPainter* /* painter */, const QStyleOptionGraphicsItem* /* option */, QWidget* /* widget */)
 {
     // we don't really need our custom gl context, but it's safer
     // to use a new one to avoid messing with the rendering of the page content
@@ -103,19 +106,19 @@ NRDPlugin::~NRDPlugin()
         m_context->create();
 
 	// Time to create the app, we are now sure that we have the context
-	NRDPlugin::instance();
+	NRDProgram::instance();
     }
     // m_context->makeCurrent(m_surface);
 
     // prevContext->makeCurrent(prevContext->surface());
 }
 
-void NRDPlugin::keyPressEvent(QKeyEvent* event)
+void NRDPlugin::keyPressEvent(QKeyEvent* /* event */)
 {
     printf("press event\n");
 }
 
-void NRDPlugin::keyReleaseEvent(QKeyEvent* event)
+void NRDPlugin::keyReleaseEvent(QKeyEvent* /* event */)
 {
     printf("release event\n");
 }

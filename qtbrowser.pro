@@ -33,7 +33,34 @@ contains(QT_CONFIG, opengl) {
 #contains(QT_CONFIG, opengles2) {}
 #contains(QT_CONFIG, egl) {}
 
+LIBS += -lEGL
+LIBS += -lwebp
+LIBS += -lz
+LIBS += -lssl
+LIBS += -lcrypto
+LIBS += -lexpat
+LIBS += -ljpeg
+LIBS += -lmng
+LIBS += -lnrd
+LIBS += -lnrdbase
+LIBS += -lnrdase
+LIBS += -lnrdase_heuristics
+LIBS += -lnrddemux
+LIBS += -lnrdnet_http
+LIBS += -lmdxlib
+LIBS += -lmdxlib_ixml
+LIBS += -lmdxlib_threadutil
+LIBS += -lmdxlib_upnp
+LIBS += -lnrdapp
+LIBS += -lnrddpi
+LIBS += -lnrdtee
+LIBS += -lJavaScriptCore
+LIBS += -lWTF
 LIBS += -lnetflix
+LIBS += -lnrdnet
+INCLUDEPATH += $(STAGING_DIR)/usr/include/interface/vcos/pthreads
+INCLUDEPATH += $(STAGING_DIR)/usr/include/gibbon/nrdapp
+INCLUDEPATH += $(STAGING_DIR)/usr/include/gibbon
 
 contains(QT_CONFIG, openssl)|contains(QT_CONFIG, openssl-linked) {
    message("Building with OpenSSL support.")
