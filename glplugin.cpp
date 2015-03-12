@@ -99,6 +99,7 @@ GLPlugin::GLPlugin()
     : QGraphicsWidget(0)
     , m_context(0)
     , m_surface(0)
+    , m_frame(0)
 {
     // needed in order to get keyboard events
     setFlag(QGraphicsItem::ItemIsFocusable, true);
@@ -168,6 +169,11 @@ void GLPlugin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     glDeleteTextures(1, &tex);
 }
 
+void GLPlugin::setNumber(int n)
+{
+    emit numberSet(n);
+}
+
 void GLPlugin::keyPressEvent(QKeyEvent* event)
 {
     printf("press event\n");
@@ -180,11 +186,25 @@ void GLPlugin::keyReleaseEvent(QKeyEvent* event)
 
 QVariant GLPlugin::itemChange(GraphicsItemChange change, const QVariant& value)
 {
+    if (change == QGraphicsItem::ItemSceneHasChanged && scene() && !m_frame) {
+        // with the current qtwebkit code, when the item is added to the scene the
+        // webFrame property has alredy been set
+        m_frame = (QWebFrame*)property("webFrame").value<void*>();
+        attachObject();
+        connect(m_frame, SIGNAL(javaScriptWindowObjectCleared()), this, SLOT(attachObject()));
+    }
+
     // when the widget gets visible and inside a scene it grabs the keyboard to get keyboard events
     // the grab will be released automatically when the widget gets hidden or out of the scene
     if (change == QGraphicsItem::ItemVisibleHasChanged || change == QGraphicsItem::ItemSceneHasChanged) {
         if (isVisible() && scene())
             grabKeyboard();
     }
+
    return QGraphicsItem::itemChange(change, value);
+}
+
+void GLPlugin::attachObject()
+{
+    m_frame->addToJavaScriptWindowObject(QString("GLPlugin"), this);
 }
