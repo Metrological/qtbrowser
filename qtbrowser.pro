@@ -8,7 +8,8 @@ HEADERS     += \
                graphicsview.h \
                webview.h \
                pluginfactory.h \
-               glplugin.h
+               glplugin.h \
+               nrdplugin.h
 
 SOURCES     += \
                sslhandler.cpp \
@@ -18,6 +19,7 @@ SOURCES     += \
                webview.cpp \
                pluginfactory.cpp \
                glplugin.cpp \
+               nrdplugin.cpp \
                qtbrowser.cpp
 
 contains(QT_CONFIG, opengl) {
@@ -30,6 +32,8 @@ contains(QT_CONFIG, opengl) {
 #contains(QT_CONFIG, opengles1) {}
 #contains(QT_CONFIG, opengles2) {}
 #contains(QT_CONFIG, egl) {}
+
+LIBS += -lnetflix
 
 contains(QT_CONFIG, openssl)|contains(QT_CONFIG, openssl-linked) {
    message("Building with OpenSSL support.")
