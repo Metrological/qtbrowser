@@ -5,7 +5,19 @@
 
 </style>
 </head>
-<body>
+<script>
+function numberSetReceived(number) {
+  console.log("numberSetReceived with value " + number);
+}
+
+function testPlugin() {
+  console.log("using setNumber slot to set 5");
+  GLPlugin.numberSet.connect(numberSetReceived);
+  GLPlugin.setNumber(5);
+}
+</script>
+
+<body onload="testPlugin()">
       <object type="application/x-qt-plugin" data="none" width="500" height="400"></object>
 </body>
 </html>
