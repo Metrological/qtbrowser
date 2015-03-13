@@ -1,5 +1,6 @@
 #include "pluginfactory.h"
 #include "nrdplugin.h"
+#include "glplugin.h"
 #include <stdio.h>
 
 PluginFactory::PluginFactory(QObject* parent)
@@ -15,6 +16,15 @@ PluginFactory::PluginFactory(QObject* parent)
     plugin.mimeTypes = QList<MimeType>() << mimeType;
 
     m_plugins << plugin;
+
+    mimeType.name = "application/x-qt-nrd";
+    mimeType.description = "External nrd application";
+
+    plugin.name = "NRD application viewer";
+    plugin.description = "NRD application viewer";
+    plugin.mimeTypes = QList<MimeType>() << mimeType;
+
+    m_plugins << plugin;
 }
 
 QList<QWebPluginFactory::Plugin> PluginFactory::plugins() const
@@ -25,8 +35,10 @@ QList<QWebPluginFactory::Plugin> PluginFactory::plugins() const
 QObject* PluginFactory::create(const QString & mimeType, const QUrl & url, const QStringList & argumentNames, const QStringList & argumentValues) const
 {
     if (mimeType == "application/x-qt-plugin") {
-        NRDPlugin *plugin = new NRDPlugin();
-        return plugin;
+        return (new GLPlugin());
+    }
+    else if (mimeType == "application/x-qt-nrd") {
+        return (new NRDPlugin());
     }
 
     return 0;

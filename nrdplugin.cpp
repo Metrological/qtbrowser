@@ -4,22 +4,15 @@
 #include <stdio.h>
 #include <QGraphicsScene>
 #include <QImage>
-#include <external/MetrologicalEGL.h>
-//#include <nrdbase/config.h>
-//#include <nrdbase/Configuration.h>
-#include <nrdbase/Thread.h>
-// #include <config.h>
 
+#include <nrdbase/Thread.h>
 #include <nrdapp/GibbonConfiguration.h>
 #include <nrdapp/GibbonApplication.h>
-//#include <nrdapp/Transform.h>
-
-//#include <nrdapp/AppLog.h>
-//#include <nrdapp/Version.h>
-//#include <nrdapp/AppThread.h>
 
 #include <stdio.h>
 #include <errno.h>
+
+#include "nrdlink.h"
 
 // using namespace std;
 using namespace netflix;
@@ -98,12 +91,15 @@ NRDPlugin::~NRDPlugin()
     // we don't really need our custom gl context, but it's safer
     // to use a new one to avoid messing with the rendering of the page content
     QOpenGLContext *prevContext = QOpenGLContext::currentContext();
+
     if (m_context == NULL) {
         m_surface = new QOffscreenSurface();
         m_surface->create();
         m_context = new QOpenGLContext();
         m_context->setShareContext(prevContext);
         m_context->create();
+
+	SetEGLParameters (m_context, m_surface);
 
 	// Time to create the app, we are now sure that we have the context
 	NRDProgram::instance();
@@ -120,6 +116,7 @@ void NRDPlugin::keyPressEvent(QKeyEvent* /* event */)
 
 void NRDPlugin::keyReleaseEvent(QKeyEvent* /* event */)
 {
+    SendInput (0);
     printf("release event\n");
 }
 
