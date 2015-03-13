@@ -20,6 +20,7 @@ SOURCES     += \
                pluginfactory.cpp \
                glplugin.cpp \
                nrdplugin.cpp \
+               nrdlink.cpp \
                qtbrowser.cpp
 
 contains(QT_CONFIG, opengl) {
@@ -48,7 +49,7 @@ LIBS += -lnrdapp
 LIBS += -lnrddpi
 LIBS += -lpthread
 LIBS += -ldl
-LIBS += -lnrdapp
+#LIBS += -lnrdapp
 LIBS += -lmdxlib
 LIBS += -lmdxlib_upnp
 LIBS += -lmdxlib_ixml

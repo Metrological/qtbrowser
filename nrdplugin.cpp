@@ -29,7 +29,7 @@ using namespace netflix::application::gibbon;
 
 #include <stdlib.h>
 
-DEFINE_THREAD(GIBBON_MAIN, 70, 5*1024*1024);
+DECLARE_THREAD(GIBBON_MAIN);
 
 static char* arguments[] = { "-I", "netflix.id" };
 
