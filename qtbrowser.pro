@@ -20,6 +20,8 @@ SOURCES     += \
                glplugin.cpp \
                qtbrowser.cpp
 
+QT += core-private gui-private opengl-private widgets-private
+
 contains(QT_CONFIG, opengl) {
    DEFINES += QT_BUILD_WITH_OPENGL
    message("Building with OpenGL support.")

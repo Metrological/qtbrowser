@@ -4,6 +4,9 @@
 #include <QGraphicsScene>
 #include <QImage>
 
+// this include requires QT += core-private gui-private opengl-private widgets-private
+#include <private/qpaintengineex_opengl2_p.h>
+
 #define STRINGIFY(...) #__VA_ARGS__
 
 static GLuint loadShader(GLenum type, const GLchar *shaderSrc)
@@ -113,6 +116,9 @@ GLPlugin::~GLPlugin()
 
 void GLPlugin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget)
 {
+    Q_UNUSED(option)
+    Q_UNUSED(widget)
+
     // we don't really need our custon gl context, but it's safer
     // to use a new one to avoid messing with the rendering of the page content
     QOpenGLContext *prevContext = QOpenGLContext::currentContext();
@@ -157,14 +163,15 @@ void GLPlugin::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, 
     glDrawArrays(GL_TRIANGLES, 0, 3);
     glDisableVertexAttribArray(program->vertexAttr());
 
-    // FIXME: avoid this CPU->GPU copy
-    QImage img(size, QImage::Format_RGBA8888_Premultiplied);
-    glReadPixels(0,0,size.width(), size.height(),GL_RGBA, GL_UNSIGNED_BYTE, img.bits());
-
     prevContext->makeCurrent(prevContext->surface());
 
-    painter->drawImage(QPoint(0,0), img.mirrored());
+    // We know that the QPainter uses accelerated painting, so we can extract the accelerated
+    // pant engine and use it to paint the texture, avoiding the GPU<->CPU copies
+    QGL2PaintEngineEx* acceleratedPaintEngine = static_cast<QGL2PaintEngineEx*>(painter->paintEngine());
+    acceleratedPaintEngine->drawTexture(QRectF(0, 0, size.width(), size.height()), tex, size, QRectF(0, 0, size.width(), size.height()));
 
+    // We can delete this here because our context and the painter context
+    // are sharing.
     glDeleteFramebuffers(1, &fbo);
     glDeleteTextures(1, &tex);
 }
@@ -176,11 +183,13 @@ void GLPlugin::setNumber(int n)
 
 void GLPlugin::keyPressEvent(QKeyEvent* event)
 {
+    Q_UNUSED(event)
     printf("press event\n");
 }
 
 void GLPlugin::keyReleaseEvent(QKeyEvent* event)
 {
+    Q_UNUSED(event)
     printf("release event\n");
 }
 
