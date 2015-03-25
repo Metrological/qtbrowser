@@ -8,8 +8,7 @@ HEADERS     += \
                graphicsview.h \
                webview.h \
                pluginfactory.h \
-               glplugin.h \
-               nrdplugin.h
+               glplugin.h
 
 SOURCES     += \
                sslhandler.cpp \
@@ -19,8 +18,6 @@ SOURCES     += \
                webview.cpp \
                pluginfactory.cpp \
                glplugin.cpp \
-               nrdplugin.cpp \
-               nrdlink.cpp \
                qtbrowser.cpp
 
 contains(QT_CONFIG, opengl) {
@@ -34,43 +31,7 @@ contains(QT_CONFIG, opengl) {
 #contains(QT_CONFIG, opengles2) {}
 #contains(QT_CONFIG, egl) {}
 
-LIBS += -lnetflix
-LIBS += -lnrdtee
-LIBS += -lmng
-LIBS += -lwebp
-LIBS += -lpng
-LIBS += -ljpeg
-LIBS += -lJavaScriptCore
-LIBS += -lWTF
-LIBS += -lfreetype
-LIBS += -lGLESv2
-LIBS += -lEGL
-LIBS += -lnrdapp
-LIBS += -lnrddpi
-LIBS += -lpthread
-LIBS += -ldl
-#LIBS += -lnrdapp
-LIBS += -lmdxlib
-LIBS += -lmdxlib_upnp
-LIBS += -lmdxlib_ixml
-LIBS += -lmdxlib_threadutil
-LIBS += -lnrd
-LIBS += -lnrddemux
-LIBS += -lnrdase
-LIBS += -lnrdnet_http
-LIBS += -lnrdnet
-LIBS += -lcares
-LIBS += -lnrdase_heuristics
-LIBS += -lcurl
-LIBS += -lnrdbase
-LIBS += -lssl
-LIBS += -lcrypto
-LIBS += -lexpat
-LIBS += -lz
-
-INCLUDEPATH += $(STAGING_DIR)/usr/include/interface/vcos/pthreads
-INCLUDEPATH += $(STAGING_DIR)/usr/include/gibbon/nrdapp
-INCLUDEPATH += $(STAGING_DIR)/usr/include/gibbon
+LIBS += -lnrdplugin
 
 contains(QT_CONFIG, openssl)|contains(QT_CONFIG, openssl-linked) {
    message("Building with OpenSSL support.")
