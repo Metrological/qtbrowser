@@ -18,7 +18,7 @@ struct IWebView
 {
     virtual ~IWebView() {}
 
-    static IWebView* instance(const enum WebKitType type);
+    static IWebView* instance(const enum WebKitType type, const enum LogLevel setLevel);
     
     virtual bool initialize(void) = 0;
     virtual void destroy(void) = 0;

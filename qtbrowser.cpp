@@ -69,6 +69,8 @@ void help(void) {
     "  --http-proxy=<url>             Address for HTTP proxy server (default: none) \n"
     "  --transparent                  Make Qt background color transparent          \n"
     "  --full-viewport-update         Set rendering to full viewport updating       \n"
+    "  --no-console-log               Do not send out any log lines.                \n"
+    "  --short-console-log            Do not send all infomrationas log line        \n"
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 #ifdef QT_BUILD_WITH_OPENGL
     "  --tiled-backing-store          Enable tiled backing store                    \n"
@@ -145,7 +147,8 @@ int main(int argc, char *argv[]) {
     QUrl proxyUrl;
     bool validateCa = true;
     unsigned int inspectorPort = 0;
-
+    LogLevel requiredLogging = LOGGING_EXTENDED;
+ 
     for (int ax = 1; ax < argc; ++ax) {
         size_t nlen;
 
@@ -210,6 +213,10 @@ int main(int argc, char *argv[]) {
             inspectorPort = (unsigned int)atoi(value);
         } else if (strncmp("--max-cached-pages", s, nlen) == 0) {
             settings->setMaximumPagesInCache((unsigned int)atoi(value));
+        } else if (strncmp("--no-console-log", s, nlen) == 0) {
+            requiredLogging = LOGGING_NONE;
+        } else if (strncmp("--short-console-log", s, nlen) == 0) {
+            requiredLogging = LOGGING_SHORT;
         } else if (strncmp("--pixmap-cache", s, nlen) == 0) {
             QPixmapCache::setCacheLimit((unsigned int)atoi(value) * 1024);
         } else if (strncmp("--object-cache", s, nlen) == 0) {
@@ -240,7 +247,7 @@ int main(int argc, char *argv[]) {
         }
     }
 
-    IWebView* webview = IWebView::instance (mode == 1 ? WEBKIT_1 : WEBKIT_2);
+    IWebView* webview = IWebView::instance (mode == 1 ? WEBKIT_1 : WEBKIT_2, requiredLogging);
 
     if (fullscreen)
         webview->setViewportUpdateMode(FullViewport);

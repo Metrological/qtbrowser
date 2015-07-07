@@ -6,10 +6,17 @@
 #include <QWebFrame>
 #include <QUrl>
 
+enum LogLevel
+{
+    LOGGING_NONE,
+    LOGGING_SHORT,
+    LOGGING_EXTENDED
+};
+
 class WebPage : public QWebPage
 {
 public:
-    WebPage();
+    WebPage(LogLevel logLevel);
     void setDefaultUserAgent(QString agent);
 
 protected:
@@ -21,6 +28,7 @@ protected:
 private:
     QString defaultUserAgent;
     QHash<QString, QString> userAgents;
+    LogLevel logLevel;
 };
 
 #endif // __WEBPAGE__

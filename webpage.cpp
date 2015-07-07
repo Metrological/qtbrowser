@@ -2,17 +2,30 @@
 
 #include <QDebug>
 
-WebPage::WebPage()
+WebPage::WebPage(LogLevel setLevel) : logLevel(setLevel)
 {
 }
 
 void WebPage::javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& source)
 {
-    if (source.isEmpty()) {
-        qDebug() << "[console]" << message.toUtf8().constData();
-    } else {
-        QString s = "[" + source + ":" + QString::number(lineNumber) + "]";
-        qDebug() << "[console]" << s.toUtf8().constData() << message.toUtf8().constData();
+    if (logLevel != LOGGING_NONE) {
+        if (source.isEmpty()) {
+            qDebug() << "[console]" << message.toUtf8().constData();
+        } else {
+            QString adaptedSource (source);
+
+            if (logLevel != LOGGING_EXTENDED) {
+                int lastIndex = source.lastIndexOf('/');
+
+                if (lastIndex > 0)
+                {
+                    adaptedSource = source.mid(lastIndex);
+                }
+            }
+
+            QString s = "[" + adaptedSource + ":" + QString::number(lineNumber) + "]";
+            qDebug() << "[console]" << s.toUtf8().constData() << message.toUtf8().constData();
+        }
     }
 }
 

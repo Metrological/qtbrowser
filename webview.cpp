@@ -53,14 +53,14 @@ namespace WebKit1
 class WebView : public IWebView
 {
 public:
-    WebView() : 
+    WebView(const enum LogLevel setLevel) : 
 #ifdef QT_BUILD_WITH_OPENGL
 	m_viewport(),
 #endif
         m_webview(),
         m_view(),
         m_scene(&m_view),
-        m_webpage()
+        m_webpage(setLevel)
     {
     }
     virtual ~WebView()
@@ -300,23 +300,23 @@ private:
 // ----------------------------------------------------------------------------------------------------------------------------------
 
 
-/* static */ IWebView* IWebView::instance(const enum WebKitType type)
+/* static */ IWebView* IWebView::instance(const enum WebKitType type, const enum LogLevel setLevel)
 {
     static IWebView* myWebView = NULL;
-    static enum WebKitType myWebType = WEBKIT_1;
+    // static enum WebKitType myWebType = WEBKIT_1;
 
-    Q_ASSERT((NULL == myWebView) || (type == myWebType));
+    // Q_ASSERT((NULL == myWebView) || (type == myWebType));
 
     if (myWebView == NULL)
     {
         if (type == WEBKIT_1)
         {
-            myWebType = WEBKIT_1;
-            myWebView = new WebKit1::WebView();
+            // myWebType = WEBKIT_1;
+            myWebView = new WebKit1::WebView(setLevel);
         }
         else
         {
-            myWebType = WEBKIT_2;
+            // myWebType = WEBKIT_2;
 
 #ifdef QT_BUILD_WITH_QML_API
             myWebView = new WebKit2::WebView();
