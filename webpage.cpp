@@ -19,7 +19,7 @@ void WebPage::javaScriptConsoleMessage(const QString& message, int lineNumber, c
 
                 if (lastIndex > 0)
                 {
-                    adaptedSource = source.mid(lastIndex);
+                    adaptedSource = source.mid(lastIndex + 1);
                 }
             }
 
