@@ -86,7 +86,7 @@ void help(void) {
 void print_version() {
   // The BROWSERVERSION information comes from the makefile/git tagging policy
   //  This still needs to be figured out, so for now it is hard-coded
-#define BROWSERVERSION  "2.0.7"  
+#define BROWSERVERSION  "2.0.8"  
   printf("Browser version: %s\n\n", BROWSERVERSION);
 }
 
