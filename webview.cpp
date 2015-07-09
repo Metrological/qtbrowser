@@ -1,4 +1,5 @@
-#include "webview.h"
+#ige
+nclude "webview.h"
 
 //WK1
 #include "graphicsview.h"
@@ -174,11 +175,12 @@ namespace WebKit2 {
 class WebView : public IWebView
 {
 public:
-    WebView() :
+    WebView(const enum LogLevel setLevel) :
         m_engine(),
         m_component(&m_engine),
         m_webview(NULL),
-        m_view(&m_engine, NULL)
+        m_view(&m_engine, NULL),
+        m_webpage(setLevel)
     {
         //Creation from a local file should be instant. Therefore we keep it simple.
         m_component.setData(QByteArray(QML_DATA), QUrl(QML_URL));
@@ -319,7 +321,7 @@ private:
             // myWebType = WEBKIT_2;
 
 #ifdef QT_BUILD_WITH_QML_API
-            myWebView = new WebKit2::WebView();
+            myWebView = new WebKit2::WebView(setLevel);
 #else
             Q_ASSERT (type != WEBKIT_2);
 #endif
