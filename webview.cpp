@@ -1,5 +1,4 @@
-#ige
-nclude "webview.h"
+#include "webview.h"
 
 //WK1
 #include "graphicsview.h"
