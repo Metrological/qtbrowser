@@ -37,6 +37,7 @@
 #include <QDesktopServices>
 #include <QPixmapCache>
 #include <QSettings>
+#include <QWebSecurityOrigin>
 
 #include "webview.h"
 #include "sslhandler.h"
@@ -61,7 +62,7 @@ void help(void) {
     "  --javascript=<on|off>          JavaScript execution (default: on)            \n"
     "  --private-browsing=<on|off>    Private browsing (default: off)               \n"
     "  --spatial-navigation=<on|off>  Spatial Navigation (default: off)             \n"
-    "  --websecurity=<on|off>         WebSecurity (default: off)                    \n"
+    "  --websecurity=<on|off>         WebSecurity (default: on)                    \n"
     "  --inspector=<port>             Inspector (default: disabled)                 \n"
     "  --max-cached-pages=<n>         Maximum pages in cache (default: 1)           \n"
     "  --pixmap-cache=<n>             Pixmap Cache size in MB (default: 20)         \n"
@@ -86,7 +87,7 @@ void help(void) {
 void print_version() {
   // The BROWSERVERSION information comes from the makefile/git tagging policy
   //  This still needs to be figured out, so for now it is hard-coded
-#define BROWSERVERSION  "2.0.8"  
+#define BROWSERVERSION  "2.0.9"
   printf("Browser version: %s\n\n", BROWSERVERSION);
 }
 
@@ -127,7 +128,7 @@ int main(int argc, char *argv[]) {
     settings->setAttribute(QWebSettings::WebAudioEnabled, true);
     settings->setAttribute(QWebSettings::PluginsEnabled, false);
     settings->setAttribute(QWebSettings::DeveloperExtrasEnabled, true);
-    settings->setAttribute(QWebSettings::WebSecurityEnabled, false);
+    settings->setAttribute(QWebSettings::WebSecurityEnabled, true);
     settings->setAttribute(QWebSettings::LocalContentCanAccessRemoteUrls, true);
     settings->setAttribute(QWebSettings::LocalStorageEnabled, true);
     settings->enablePersistentStorage(path);
@@ -258,6 +259,15 @@ int main(int argc, char *argv[]) {
 
     if (!userAgent.isEmpty())
        page.setDefaultUserAgent(userAgent);
+
+    // Implement the whitelist functionality, allowing
+    QWebSecurityOrigin originHttp(QString("http://widgets.metrological.com"));
+    originHttp.addAccessWhitelistEntry("http",  "www.youtube.com", QWebSecurityOrigin::AllowSubdomains);
+    originHttp.addAccessWhitelistEntry("https", "www.youtube.com", QWebSecurityOrigin::AllowSubdomains);
+
+    QWebSecurityOrigin originHttps(QString("https://widgets.metrological.com"));
+    originHttps.addAccessWhitelistEntry("http",  "www.youtube.com", QWebSecurityOrigin::AllowSubdomains);
+    originHttps.addAccessWhitelistEntry("https", "www.youtube.com", QWebSecurityOrigin::AllowSubdomains);
 
     if (!proxyUrl.isEmpty()) {
         QNetworkAccessManager* manager = page.networkAccessManager();
