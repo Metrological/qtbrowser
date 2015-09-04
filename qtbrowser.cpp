@@ -39,8 +39,45 @@
 #include <QSettings>
 #include <QWebSecurityOrigin>
 
+
 #include "webview.h"
 #include "sslhandler.h"
+
+
+#ifdef  QT_BUILD_WITH_SYSLOG
+// Send the output to the system logger, instead of to stdout/stderr
+#include <QtDebug>
+#include <syslog.h>
+
+
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+void mySyslogMessageHandler(QtMsgType type, const QMessageLogContext &, const QString & str)
+{
+  const char * msg = str.toUtf8().data();
+#else
+void mySyslogMessageHandler(QtMsgType type, const char *msg)
+{
+#endif
+  openlog("QTBROWSER", LOG_ODELAY, LOG_USER);
+	switch (type) {
+	case QtDebugMsg:
+    syslog(LOG_DEBUG, msg);
+		break;
+	case QtWarningMsg:
+    syslog(LOG_WARNING, msg);
+	  break;
+	case QtCriticalMsg:
+    syslog(LOG_CRIT, msg);
+	  break;
+	case QtFatalMsg:
+  default :
+    syslog(LOG_ERR, msg);
+    break;
+	}
+
+  closelog();
+}
+#endif  // QT_BUILD_WITH_SYSLOG
 
 
 void help(void) {
@@ -87,7 +124,7 @@ void help(void) {
 void print_version() {
   // The BROWSERVERSION information comes from the makefile/git tagging policy
   //  This still needs to be figured out, so for now it is hard-coded
-#define BROWSERVERSION  "2.0.9"
+#define BROWSERVERSION  "2.0.10"
   printf("Browser version: %s\n\n", BROWSERVERSION);
 }
 
@@ -98,10 +135,21 @@ void webSettingAttribute(QWebSettings::WebAttribute option, const QString& value
         QWebSettings::globalSettings()->setAttribute(option, false);
 }
 
+
 int main(int argc, char *argv[]) {
     print_version();
 
     QApplication application(argc, argv);
+
+
+#ifdef QT_BUILD_WITH_SYSLOG
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+    qInstallMessageHandler(mySyslogMessageHandler);
+#else
+    qInstallMsgHandler(mySyslogMessageHandler);
+#endif
+#endif  // QT_BUILD_WITH_SYSLOG
+
 
     QSize size = QApplication::desktop()->screenGeometry().size();
 
