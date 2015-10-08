@@ -49,33 +49,59 @@
 #include <QtDebug>
 #include <syslog.h>
 
+class Logger
+{
+private:
+  Logger(const Logger&);
+  Logger& operator= (const Logger&);
+
+public:
+  Logger ()
+  {
+    openlog("QTBROWSER", LOG_ODELAY, LOG_USER);
+  }
+  ~Logger()
+  {
+    closelog();
+  }
+
+public:
+  void Log (QtMsgType type, const char *msg)
+  {
+    int priority = LOG_ERR;
+
+    switch (type)
+    {
+      case QtDebugMsg:
+        priority = LOG_DEBUG;
+        break;
+      case QtWarningMsg:
+        priority = LOG_WARNING;
+        break;
+      case QtCriticalMsg:
+        priority = LOG_CRIT;
+        break;
+      case QtFatalMsg:
+      default :
+        priority = LOG_ERR;
+        break;
+    }
+
+    syslog(priority, "%s", msg);
+  }
+};
+
+static Logger _myLogger;
 
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-void mySyslogMessageHandler(QtMsgType type, const QMessageLogContext &, const QString & str)
+void mySyslogMessageHandler(QtMsgType type, const QMessageLogContext&, const QString& str)
 {
   const char * msg = str.toUtf8().data();
 #else
-void mySyslogMessageHandler(QtMsgType type, const char *msg)
+void mySyslogMessageHandler(QtMsgType type, const char* msg)
 {
 #endif
-  openlog("QTBROWSER", LOG_ODELAY, LOG_USER);
-	switch (type) {
-	case QtDebugMsg:
-    syslog(LOG_DEBUG, msg);
-		break;
-	case QtWarningMsg:
-    syslog(LOG_WARNING, msg);
-	  break;
-	case QtCriticalMsg:
-    syslog(LOG_CRIT, msg);
-	  break;
-	case QtFatalMsg:
-  default :
-    syslog(LOG_ERR, msg);
-    break;
-	}
-
-  closelog();
+  _myLogger.Log(type, msg);
 }
 #endif  // QT_BUILD_WITH_SYSLOG
 
@@ -124,7 +150,7 @@ void help(void) {
 void print_version() {
   // The BROWSERVERSION information comes from the makefile/git tagging policy
   //  This still needs to be figured out, so for now it is hard-coded
-#define BROWSERVERSION  "2.0.10"
+#define BROWSERVERSION  "2.0.11"
   printf("Browser version: %s\n\n", BROWSERVERSION);
 }
 
