@@ -125,7 +125,8 @@ void help(void) {
     "  --javascript=<on|off>          JavaScript execution (default: on)            \n"
     "  --private-browsing=<on|off>    Private browsing (default: off)               \n"
     "  --spatial-navigation=<on|off>  Spatial Navigation (default: off)             \n"
-    "  --websecurity=<on|off>         WebSecurity (default: on)                    \n"
+    "  --websecurity=<on|off>         WebSecurity (default: on)                     \n"
+    "  --whitelist-config=<filename>  Full path to file containing whitelisted URIs \n "
     "  --inspector=<port>             Inspector (default: disabled)                 \n"
     "  --max-cached-pages=<n>         Maximum pages in cache (default: 1)           \n"
     "  --pixmap-cache=<n>             Pixmap Cache size in MB (default: 20)         \n"
@@ -134,7 +135,7 @@ void help(void) {
     "  --transparent                  Make Qt background color transparent          \n"
     "  --full-viewport-update         Set rendering to full viewport updating       \n"
     "  --no-console-log               Do not send out any log lines.                \n"
-    "  --short-console-log            Do not send all infomrationas log line        \n"
+    "  --short-console-log            Do not send the full informational log line   \n"
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
 #ifdef QT_BUILD_WITH_OPENGL
     "  --tiled-backing-store          Enable tiled backing store                    \n"
@@ -150,7 +151,7 @@ void help(void) {
 void print_version() {
   // The BROWSERVERSION information comes from the makefile/git tagging policy
   //  This still needs to be figured out, so for now it is hard-coded
-#define BROWSERVERSION  "2.0.11"
+#define BROWSERVERSION  "2.0.12 - Engineering release"
   printf("Browser version: %s\n\n", BROWSERVERSION);
 }
 
@@ -169,6 +170,7 @@ int main(int argc, char *argv[]) {
 
 
 #ifdef QT_BUILD_WITH_SYSLOG
+    // Install msg handler redirecting console output to syslog
 #if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
     qInstallMessageHandler(mySyslogMessageHandler);
 #else
@@ -223,6 +225,7 @@ int main(int argc, char *argv[]) {
     bool validateCa = true;
     unsigned int inspectorPort = 0;
     LogLevel requiredLogging = LOGGING_EXTENDED;
+    QString whiteListFilename;
  
     for (int ax = 1; ax < argc; ++ax) {
         size_t nlen;
@@ -284,6 +287,8 @@ int main(int argc, char *argv[]) {
             webSettingAttribute(QWebSettings::SpatialNavigationEnabled, value);
         } else if (strncmp("--websecurity", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
+        } else if (strncmp("--whitelist-config", s, nlen) == 0) {
+            whiteListFilename = QString(value);
         } else if (strncmp("--inspector", s, nlen) == 0) {
             inspectorPort = (unsigned int)atoi(value);
         } else if (strncmp("--max-cached-pages", s, nlen) == 0) {
@@ -334,14 +339,39 @@ int main(int argc, char *argv[]) {
     if (!userAgent.isEmpty())
        page.setDefaultUserAgent(userAgent);
 
-    // Implement the whitelist functionality, allowing
-    QWebSecurityOrigin originHttp(QString("http://widgets.metrological.com"));
-    originHttp.addAccessWhitelistEntry("http",  "www.youtube.com", QWebSecurityOrigin::AllowSubdomains);
-    originHttp.addAccessWhitelistEntry("https", "www.youtube.com", QWebSecurityOrigin::AllowSubdomains);
-
+    // The whitelist functionality
+    QWebSecurityOrigin originHttp (QString("http://widgets.metrological.com"));
     QWebSecurityOrigin originHttps(QString("https://widgets.metrological.com"));
-    originHttps.addAccessWhitelistEntry("http",  "www.youtube.com", QWebSecurityOrigin::AllowSubdomains);
-    originHttps.addAccessWhitelistEntry("https", "www.youtube.com", QWebSecurityOrigin::AllowSubdomains);
+
+    if(whiteListFilename.isEmpty() != true)
+    {
+      QFile whitelistconfigfile(whiteListFilename);
+      if((whitelistconfigfile.exists() == true) && (whitelistconfigfile.open(QIODevice::ReadOnly | QIODevice::Text) == true))
+      {
+        QTextStream in(&whitelistconfigfile);
+        int numberWhiteListUris = 0;
+
+        while (!in.atEnd())
+        {
+            QUrl whitelistUri(in.readLine());
+
+            originHttp.addAccessWhitelistEntry (whitelistUri.scheme(), whitelistUri.host(), QWebSecurityOrigin::AllowSubdomains);
+            originHttps.addAccessWhitelistEntry(whitelistUri.scheme(), whitelistUri.host(), QWebSecurityOrigin::AllowSubdomains);
+            ++numberWhiteListUris;
+        }
+
+        whitelistconfigfile.close();
+        qDebug() << "INFO: whitelisted" << numberWhiteListUris << "URIs";
+      }
+      else
+      {
+        qDebug() << "WARNING: Unable to open whitelist configuration file" << whiteListFilename;
+      }
+    }
+    else
+    {
+      // No whitelisted URI's required
+    }
 
     if (!proxyUrl.isEmpty()) {
         QNetworkAccessManager* manager = page.networkAccessManager();
