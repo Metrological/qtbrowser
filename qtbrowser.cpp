@@ -43,11 +43,15 @@
 #include "webview.h"
 #include "sslhandler.h"
 
+#include <QJsonDocument>
+#include <QJsonParseError>
+#include <QJsonArray>
 
 #ifdef  QT_BUILD_WITH_SYSLOG
 // Send the output to the system logger, instead of to stdout/stderr
 #include <QtDebug>
 #include <syslog.h>
+
 
 class Logger
 {
@@ -106,6 +110,9 @@ void mySyslogMessageHandler(QtMsgType type, const char* msg)
 #endif  // QT_BUILD_WITH_SYSLOG
 
 
+void processWhitelistingURIs(const QString& whitelistFilename, QList<QWebSecurityOrigin*>& originList);
+
+
 void help(void) {
   printf("%s",
     " ------------------------------------------------------------------------------\n"
@@ -149,9 +156,9 @@ void help(void) {
 }
 
 void print_version() {
-  // The BROWSERVERSION information comes from the makefile/git tagging policy
+  // The BROWSERVERSION information should come from the makefile/git tagging policy
   //  This still needs to be figured out, so for now it is hard-coded
-#define BROWSERVERSION  "2.0.12 - Engineering release"
+#define BROWSERVERSION  "2.0.12"
   printf("Browser version: %s\n\n", BROWSERVERSION);
 }
 
@@ -225,7 +232,7 @@ int main(int argc, char *argv[]) {
     bool validateCa = true;
     unsigned int inspectorPort = 0;
     LogLevel requiredLogging = LOGGING_EXTENDED;
-    QString whiteListFilename;
+    QString whitelistFilename;
  
     for (int ax = 1; ax < argc; ++ax) {
         size_t nlen;
@@ -288,7 +295,7 @@ int main(int argc, char *argv[]) {
         } else if (strncmp("--websecurity", s, nlen) == 0) {
             webSettingAttribute(QWebSettings::WebSecurityEnabled, value);
         } else if (strncmp("--whitelist-config", s, nlen) == 0) {
-            whiteListFilename = QString(value);
+            whitelistFilename = QString(value);
         } else if (strncmp("--inspector", s, nlen) == 0) {
             inspectorPort = (unsigned int)atoi(value);
         } else if (strncmp("--max-cached-pages", s, nlen) == 0) {
@@ -333,40 +340,17 @@ int main(int argc, char *argv[]) {
         webview->setViewportUpdateMode(FullViewport);
 
     WebPage& page = webview->page();
-    if (inspectorPort)
+    if (inspectorPort > 0)
         page.setProperty("_q_webInspectorServerPort", inspectorPort);
 
     if (!userAgent.isEmpty())
        page.setDefaultUserAgent(userAgent);
 
     // The whitelist functionality
-    QWebSecurityOrigin originHttp (QString("http://widgets.metrological.com"));
-    QWebSecurityOrigin originHttps(QString("https://widgets.metrological.com"));
-
-    if(whiteListFilename.isEmpty() != true)
+    QList<QWebSecurityOrigin*> whitelistOrigins;
+    if(whitelistFilename.isEmpty() != true)
     {
-      QFile whitelistconfigfile(whiteListFilename);
-      if((whitelistconfigfile.exists() == true) && (whitelistconfigfile.open(QIODevice::ReadOnly | QIODevice::Text) == true))
-      {
-        QTextStream in(&whitelistconfigfile);
-        int numberWhiteListUris = 0;
-
-        while (!in.atEnd())
-        {
-            QUrl whitelistUri(in.readLine());
-
-            originHttp.addAccessWhitelistEntry (whitelistUri.scheme(), whitelistUri.host(), QWebSecurityOrigin::AllowSubdomains);
-            originHttps.addAccessWhitelistEntry(whitelistUri.scheme(), whitelistUri.host(), QWebSecurityOrigin::AllowSubdomains);
-            ++numberWhiteListUris;
-        }
-
-        whitelistconfigfile.close();
-        qDebug() << "INFO: whitelisted" << numberWhiteListUris << "URIs";
-      }
-      else
-      {
-        qDebug() << "WARNING: Unable to open whitelist configuration file" << whiteListFilename;
-      }
+      processWhitelistingURIs(whitelistFilename, whitelistOrigins);
     }
     else
     {
@@ -392,6 +376,53 @@ int main(int argc, char *argv[]) {
     int result = application.exec();
 
     webview->destroy();
+    qDeleteAll(whitelistOrigins.begin(), whitelistOrigins.end());
 
-    return (result);
+    return result;
+}
+
+void processWhitelistingURIs(const QString& whitelistFilename, QList<QWebSecurityOrigin*>& originList)
+{
+  QFile whitelistConfigFile(whitelistFilename);
+
+  if((whitelistConfigFile.exists() == true) && (whitelistConfigFile.open(QIODevice::ReadOnly | QIODevice::Text) == true))
+  {
+    QJsonParseError jerror;
+    QJsonDocument   jsonDoc = QJsonDocument::fromJson(whitelistConfigFile.readAll(), &jerror);
+
+    if(jerror.error != QJsonParseError::NoError)
+    {
+      qDebug() << "ERROR: parsing whitelist configuration file" << whitelistFilename;
+    }
+    else
+    {
+      QJsonArray entries = jsonDoc.array();
+      int numberWhiteListed = 0;
+
+      for(int index = 0; index < entries.size(); ++index)
+      {
+        QJsonObject entry  = entries[index].toObject();
+        QString origin     = entry["origin"].toString();
+        QWebSecurityOrigin* subdomains = new QWebSecurityOrigin(origin);
+ 
+        QJsonArray subdomainUris = entry["domain"].toArray();
+        for(int domainIndex = 0; domainIndex < subdomainUris.size(); ++domainIndex)
+        {
+          QUrl whitelistUri(subdomainUris[domainIndex].toString());
+
+          subdomains->addAccessWhitelistEntry (whitelistUri.scheme(), whitelistUri.host(), QWebSecurityOrigin::AllowSubdomains);
+          ++numberWhiteListed;
+        }
+        originList.append(subdomains);
+      }
+
+      qDebug() << "INFO: whitelisted" << numberWhiteListed << "URIs";
+    }
+
+    whitelistConfigFile.close();
+  }
+  else
+  {
+    qDebug() << "WARNING: Unable to open whitelist configuration file" << whitelistFilename;
+  }
 }
