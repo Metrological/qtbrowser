@@ -1,6 +1,7 @@
 #include "webpage.h"
 
-#include <QDebug>
+#include <SysLog.h>
+
 
 WebPage::WebPage(LogLevel setLevel) : logLevel(setLevel)
 {
@@ -10,7 +11,7 @@ void WebPage::javaScriptConsoleMessage(const QString& message, int lineNumber, c
 {
     if (logLevel != LOGGING_NONE) {
         if (source.isEmpty()) {
-            qDebug() << "[console]" << message.toUtf8().constData();
+            WTF::sysLogF("[console] %s", message.toUtf8().constData());
         } else {
             QString adaptedSource (source);
 
@@ -23,15 +24,15 @@ void WebPage::javaScriptConsoleMessage(const QString& message, int lineNumber, c
                 }
             }
 
-            QString s = "[" + adaptedSource + ":" + QString::number(lineNumber) + "]";
-            qDebug() << "[console]" << s.toUtf8().constData() << message.toUtf8().constData();
+            QString s = "[console] [" + adaptedSource + ":" + QString::number(lineNumber) + "] " + message;
+            WTF::sysLogF("%s", s.toUtf8().constData());
         }
     }
 }
 
 void WebPage::javaScriptAlert(QWebFrame*, const QString& message)
 {
-    qDebug() << "[alert]  " << message.toUtf8().constData();
+    WTF::sysLogF("[console] [alert] %s", message.toUtf8().constData());
 }
 
 bool WebPage::shouldInterruptJavaScript()

@@ -47,67 +47,8 @@
 #include <QJsonParseError>
 #include <QJsonArray>
 
-#ifdef  QT_BUILD_WITH_SYSLOG
 // Send the output to the system logger, instead of to stdout/stderr
-#include <QtDebug>
-#include <syslog.h>
-
-
-class Logger
-{
-private:
-  Logger(const Logger&);
-  Logger& operator= (const Logger&);
-
-public:
-  Logger ()
-  {
-    openlog("QTBROWSER", LOG_ODELAY, LOG_USER);
-  }
-  ~Logger()
-  {
-    closelog();
-  }
-
-public:
-  void Log (QtMsgType type, const char *msg)
-  {
-    int priority = LOG_ERR;
-
-    switch (type)
-    {
-      case QtDebugMsg:
-        priority = LOG_DEBUG;
-        break;
-      case QtWarningMsg:
-        priority = LOG_WARNING;
-        break;
-      case QtCriticalMsg:
-        priority = LOG_CRIT;
-        break;
-      case QtFatalMsg:
-      default :
-        priority = LOG_ERR;
-        break;
-    }
-
-    syslog(priority, "%s", msg);
-  }
-};
-
-static Logger _myLogger;
-
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-void mySyslogMessageHandler(QtMsgType type, const QMessageLogContext&, const QString& str)
-{
-  const char * msg = str.toUtf8().data();
-#else
-void mySyslogMessageHandler(QtMsgType type, const char* msg)
-{
-#endif
-  _myLogger.Log(type, msg);
-}
-#endif  // QT_BUILD_WITH_SYSLOG
+#include <SysLog.h>
 
 
 void processWhitelistingURIs(const QString& whitelistFilename, QList<QWebSecurityOrigin*>& originList);
@@ -158,8 +99,8 @@ void help(void) {
 void print_version() {
   // The BROWSERVERSION information should come from the makefile/git tagging policy
   //  This still needs to be figured out, so for now it is hard-coded
-#define BROWSERVERSION  "2.0.12"
-  printf("Browser version: %s\n\n", BROWSERVERSION);
+#define BROWSERVERSION  "2.0.13"
+  WTF::sysLogF("Browser version: %s\n\n", BROWSERVERSION);
 }
 
 void webSettingAttribute(QWebSettings::WebAttribute option, const QString& value) {
@@ -171,28 +112,20 @@ void webSettingAttribute(QWebSettings::WebAttribute option, const QString& value
 
 
 int main(int argc, char *argv[]) {
-    print_version();
-
     QApplication application(argc, argv);
 
-
 #ifdef QT_BUILD_WITH_SYSLOG
-    // Install msg handler redirecting console output to syslog
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-    qInstallMessageHandler(mySyslogMessageHandler);
-#else
-    qInstallMsgHandler(mySyslogMessageHandler);
+    WTF::openSysLog("QTBROWSER");
 #endif
-#endif  // QT_BUILD_WITH_SYSLOG
 
+    print_version();
 
     QSize size = QApplication::desktop()->screenGeometry().size();
 
-    QString path;
 #if (QT_VERSION >= QT_VERSION_CHECK(5, 0, 0))
-    path = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
+    QString path = QStandardPaths::writableLocation(QStandardPaths::DataLocation);
 #else
-    path = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
+    QString path = QDesktopServices::storageLocation(QDesktopServices::DataLocation);
 #endif
 
     QPixmapCache::setCacheLimit(20 * 1024);
@@ -375,6 +308,10 @@ int main(int argc, char *argv[]) {
 
     int result = application.exec();
 
+#ifdef QT_BUILD_WITH_SYSLOG
+    WTF::closeSysLog();
+#endif
+
     webview->destroy();
     qDeleteAll(whitelistOrigins.begin(), whitelistOrigins.end());
 
@@ -392,7 +329,7 @@ void processWhitelistingURIs(const QString& whitelistFilename, QList<QWebSecurit
 
     if(jerror.error != QJsonParseError::NoError)
     {
-      qDebug() << "ERROR: parsing whitelist configuration file" << whitelistFilename;
+      WTF::sysLogF("[browser] ERROR: parsing whitelist configuration file %s", whitelistFilename.toUtf8().constData());
     }
     else
     {
@@ -416,13 +353,13 @@ void processWhitelistingURIs(const QString& whitelistFilename, QList<QWebSecurit
         originList.append(subdomains);
       }
 
-      qDebug() << "INFO: whitelisted" << numberWhiteListed << "URIs";
+      WTF::sysLogF("[browser] INFO: whitelisted %d URIs", numberWhiteListed);
     }
 
     whitelistConfigFile.close();
   }
   else
   {
-    qDebug() << "WARNING: Unable to open whitelist configuration file" << whitelistFilename;
+    WTF::sysLogF("[browser] WARNING: Unable to open whitelist configuration file %s", whitelistFilename.toUtf8().constData());
   }
 }
