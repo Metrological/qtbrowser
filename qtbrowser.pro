@@ -78,5 +78,11 @@ contains(QT_MAJOR_VERSION, 5) {
       warning("QtQuick/QML API might not be supported.")
    }
 
+   contains(BROWSER_CONFIG, qtwebdriver) {
+      DEFINES += QT_BUILD_WITH_WEBDRIVER
+      SOURCES += qtwebdriver.cpp
+      message("Building with webdriver support.")
+   }
+
    message("Building for Qt5.")
 }

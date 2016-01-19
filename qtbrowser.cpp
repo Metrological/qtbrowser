@@ -50,6 +50,9 @@
 // Send the output to the system logger, instead of to stdout/stderr
 #include <SysLog.h>
 
+#ifdef QT_BUILD_WITH_WEBDRIVER
+int startWebDriver();
+#endif
 
 void processWhitelistingURIs(const QString& whitelistFilename, QList<QWebSecurityOrigin*>& originList);
 
@@ -88,6 +91,9 @@ void help(void) {
 #ifdef QT_BUILD_WITH_OPENGL
     "  --tiled-backing-store          Enable tiled backing store                    \n"
 #endif
+#ifdef QT_BUILD_WITH_WEBDRIVER
+    "  --webdriver                    Enable web driver functionality               \n"
+#endif
 #endif
     "  --validate-ca=<on|off>         Validate Root CA certificates (default: on)   \n"
     "  --cookie-storage=<path>        Set cookie storage path                       \n"
@@ -99,7 +105,7 @@ void help(void) {
 void print_version() {
   // The BROWSERVERSION information should come from the makefile/git tagging policy
   //  This still needs to be figured out, so for now it is hard-coded
-#define BROWSERVERSION  "2.0.13"
+#define BROWSERVERSION  "2.0.14-ER_WEBDRIVER"
   WTF::sysLogF("Browser version: %s\n\n", BROWSERVERSION);
 }
 
@@ -194,6 +200,10 @@ int main(int argc, char *argv[]) {
 #ifdef QT_BUILD_WITH_OPENGL
         } else if (strcmp("--tiled-backing-store", s) == 0) {
             settings->setAttribute(QWebSettings::TiledBackingStoreEnabled, true);
+#endif
+#ifdef QT_BUILD_WITH_WEBDRIVER
+        } else if (strcmp("--webdriver", s) == 0) {
+            startWebDriver();
 #endif
 #endif
         } else if (strcmp("--full-viewport-update", s) == 0) {
