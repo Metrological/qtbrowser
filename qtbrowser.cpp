@@ -105,7 +105,7 @@ void help(void) {
 void print_version() {
   // The BROWSERVERSION information should come from the makefile/git tagging policy
   //  This still needs to be figured out, so for now it is hard-coded
-#define BROWSERVERSION  "2.0.14-ER_WEBDRIVER"
+#define BROWSERVERSION  "2.0.14"
   WTF::sysLogF("Browser version: %s\n\n", BROWSERVERSION);
 }
 
